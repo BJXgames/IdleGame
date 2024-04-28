@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "MainPlayerController.generated.h"
 
+class UUpgradeUI;
 class UAfkUI;
 class UMainUI;
 UCLASS()
@@ -26,4 +27,9 @@ public:
 	TSubclassOf<UAfkUI>  AfkUIClass;
 
 	TObjectPtr<UAfkUI> AfkUI;
+
+	UPROPERTY(EditAnywhere, Category = UI)
+	TSubclassOf<UUpgradeUI>  UpgradeUIClass;
+
+	TObjectPtr<UUpgradeUI> UpgradeUI;
 };

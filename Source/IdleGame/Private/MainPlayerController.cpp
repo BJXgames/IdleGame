@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "UI/AfkUI.h"
 #include "UI/MainUI.h"
+#include "UI/UpgradeUI.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -17,6 +18,11 @@ void AMainPlayerController::BeginPlay()
 	AfkUI = CreateWidget<UAfkUI>(GetWorld(), AfkUIClass);
 	check(AfkUI)
 	AfkUI->AddToViewport();
+
+	UpgradeUI = CreateWidget<UUpgradeUI>(GetWorld(), UpgradeUIClass);
+	check(UpgradeUI)
+	UpgradeUI->AddToViewport();
+	UpgradeUI->SetVisibility(ESlateVisibility::Collapsed);
 
 	SetInputMode(FInputModeUIOnly());
 	bShowMouseCursor = true;
