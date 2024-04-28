@@ -20,8 +20,10 @@ void UUpgradeUI::UpdateGenText(double Quantity, double MaxTime, double Income, F
 {
 	GenIncomeText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(Income * (1 / MaxTime) * Quantity)));
 	GenQuantityText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(Quantity)));
-	GenSpeedText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(MaxTime) + "s"));
-	GenNameText->SetText(FText::FromString(GenName)); 
+	GenSpeedText->SetText(FText::FromString(WorldSubsystem->FormatNumber(MaxTime) + "s"));
+	GenNameText->SetText(FText::FromString(GenName));
+
+	// UE_LOG(LogTemp, Warning, TEXT("speed: %s"), *WorldSubsystem->FormatLargeNumber(MaxTime))
 }
 
 void UUpgradeUI::UpgradeSpeed()

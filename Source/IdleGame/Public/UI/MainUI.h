@@ -31,6 +31,9 @@ class IDLEGAME_API UMainUI : public UUserWidget
 	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
 	UTextBlock* CurrentMoneyText;
 
+	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
+	UTextBlock* IncomePerSecondText;
+
 	/*UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
 	UScrollBox* ScrollBox;*/
 
@@ -51,10 +54,14 @@ protected:
 
 	void AddGeneratorToTheScrollBox();
 
+	void UpdateIncomePerSecond();
+
 	bool bIsbuyx1Active = true;
 	bool bIsbuyx5Active = false;
 	bool bIsbuyx10Active = false;
 	bool bIsbuyMaxActive = false;
+
+	double IncomePerSecond;
 	
 public:
 	

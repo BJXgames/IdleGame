@@ -126,8 +126,8 @@ void UGeneratorUI::UpdateProgressBar()
 
 void UGeneratorUI::OpenUpgradeWidget()
 {
-    UE_LOG(LogTemp, Warning, TEXT("Selected Generator: %s"), *MainGameInstance->CurrentSelectedGenerator)
-    UE_LOG(LogTemp, Warning, TEXT("Clicked on Generator: %s"), *GeneratorData.GeneratorName)
+    //UE_LOG(LogTemp, Warning, TEXT("Selected Generator: %s"), *MainGameInstance->CurrentSelectedGenerator)
+    //UE_LOG(LogTemp, Warning, TEXT("Clicked on Generator: %s"), *GeneratorData.GeneratorName)
     
     if(PlayerController->UpgradeUI->IsVisible())
     {

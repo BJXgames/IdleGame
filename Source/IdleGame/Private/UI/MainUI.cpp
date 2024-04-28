@@ -159,6 +159,14 @@ void UMainUI::AddGeneratorToTheScrollBox()
 	}
 }
 
+void UMainUI::UpdateIncomePerSecond()
+{
+	IncomePerSecond = 0;
+	IncomePerSecond += MainGameInstance->Generators[0]->GeneratorData.Income * (1 / MainGameInstance->Generators[0]->GeneratorData.MaxTime) * MainGameInstance->Generators[0]->GeneratorData.Quantity;
+	
+	IncomePerSecondText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(IncomePerSecond) + " Per Second"));
+}
+
 
 void UMainUI::NativeConstruct()
 {
@@ -180,9 +188,10 @@ void UMainUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	CurrentMoneyText->SetText(FText::FromString(FString::Printf(TEXT("%s"), *WorldSubsystem->FormatLargeNumber(MainGameInstance->Money))));
+	CurrentMoneyText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(MainGameInstance->Money)));
 
 	UpdateBuyMultiplier();
+	UpdateIncomePerSecond();
 
 	
 }
