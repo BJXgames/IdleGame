@@ -4,10 +4,12 @@
 #include "UI/GeneratorUI.h"
 
 #include "MainGameInstance.h"
+#include "MainPlayerController.h"
 #include "MainWorldSubsystem.h"
 #include "Components/Button.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "UI/UpgradeUI.h"
 
 void UGeneratorUI::Buy()
 {
@@ -42,15 +44,11 @@ void UGeneratorUI::UpdateBuyButtonState()
     {
         // Disable buy button if not enough product or money
         BuyButton->SetIsEnabled(GeneratorData.ProductCost * BuyMultiplier <= Product->GeneratorData.Quantity && GeneratorData.MoneyCost * BuyMultiplier <= MainGameInstance->Money);
-        //UE_LOG(LogTemp, Warning, TEXT("Calculated ProductCost: %.0LF"), GeneratorData.ProductCost * MainGameInstance->SelectedMultiplier)
-        //UE_LOG(LogTemp, Warning, TEXT("Calculated Product Quantity: %.0LF"), Product->GeneratorData.Quantity * MainGameInstance->SelectedMultiplier)
     }
     else
     {
         // Disable buy button if not enough money
         BuyButton->SetIsEnabled(GeneratorData.MoneyCost * BuyMultiplier <= MainGameInstance->Money);
-        //UE_LOG(LogTemp, Warning, TEXT("Calculated cost: %.0LF"), GeneratorData.MoneyCost * MainGameInstance->SelectedMultiplier)
-        //UE_LOG(LogTemp, Warning, TEXT("Calculated TotalMoney: %.0LF"), MainGameInstance->Money * MainGameInstance->SelectedMultiplier)
     }
 }
 
@@ -96,6 +94,7 @@ void UGeneratorUI::NativePreConstruct()
     Super::NativePreConstruct();
     WorldSubsystem = GetWorld()->GetSubsystem<UMainWorldSubsystem>();
     MainGameInstance = GetGameInstance<UMainGameInstance>();
+    PlayerController = GetWorld()->GetFirstPlayerController<AMainPlayerController>();
     
 }
 
@@ -121,6 +120,19 @@ void UGeneratorUI::UpdateProgressBar()
     if (GeneratorData.MaxTime > 0 && GeneratorData.Quantity > 0)
     {
         ProgressBar->SetPercent(Time / GeneratorData.MaxTime);
+    }
+}
+
+void UGeneratorUI::OpenUpgradeWidget()
+{
+    if(PlayerController->UpgradeUI->IsVisible())
+    {
+        PlayerController->UpgradeUI->SetVisibility(ESlateVisibility::Collapsed);
+    }
+    else
+    {
+        PlayerController->UpgradeUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        UE_LOG(LogTemp, Warning, TEXT("Generator: %s"), *GeneratorData.GeneratorName);
     }
 }
 

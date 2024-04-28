@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GeneratorUI.generated.h"
 
+class AMainPlayerController;
 class UMainGameInstance;
 class UButton;
 class UMainWorldSubsystem;
@@ -46,7 +47,9 @@ class IDLEGAME_API UGeneratorUI : public UUserWidget
 	
 	UPROPERTY()
 	UMainGameInstance* MainGameInstance;
-	
+
+	UPROPERTY()
+	AMainPlayerController* PlayerController;
 
 public:
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
@@ -95,6 +98,9 @@ protected:
 	void CheckIncomeGeneration();
 	void UpdateProgressBar();
 	void UpdateBuyButtonState();
+
+	UFUNCTION(BlueprintCallable)
+	void OpenUpgradeWidget();
 	
 	
 
