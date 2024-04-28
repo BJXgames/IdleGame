@@ -36,6 +36,7 @@ void UGeneratorUI::Buy()
         UpdateBuyButtonState();
         GenerateIncome();
     }
+    PlayerController->UpgradeUI->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime, GeneratorData.Income, GeneratorData.GeneratorName);
 }
 
 void UGeneratorUI::UpdateBuyButtonState()
@@ -125,15 +126,27 @@ void UGeneratorUI::UpdateProgressBar()
 
 void UGeneratorUI::OpenUpgradeWidget()
 {
+    UE_LOG(LogTemp, Warning, TEXT("Selected Generator: %s"), *MainGameInstance->CurrentSelectedGenerator)
+    UE_LOG(LogTemp, Warning, TEXT("Clicked on Generator: %s"), *GeneratorData.GeneratorName)
+    
     if(PlayerController->UpgradeUI->IsVisible())
     {
-        PlayerController->UpgradeUI->SetVisibility(ESlateVisibility::Collapsed);
+        if(GeneratorData.GeneratorName == MainGameInstance->CurrentSelectedGenerator)
+        {
+            PlayerController->UpgradeUI->SetVisibility(ESlateVisibility::Collapsed);
+        }
+        else
+        {
+            PlayerController->UpgradeUI->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime, GeneratorData.Income, GeneratorData.GeneratorName);
+        }
     }
     else
     {
+        PlayerController->UpgradeUI->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime, GeneratorData.Income, GeneratorData.GeneratorName);
         PlayerController->UpgradeUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-        UE_LOG(LogTemp, Warning, TEXT("Generator: %s"), *GeneratorData.GeneratorName);
     }
+    MainGameInstance->CurrentSelectedGenerator = GeneratorData.GeneratorName;
+    
 }
 
 

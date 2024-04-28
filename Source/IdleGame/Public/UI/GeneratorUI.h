@@ -101,6 +101,8 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void OpenUpgradeWidget();
+
+	
 	
 	
 

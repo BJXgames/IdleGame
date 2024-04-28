@@ -53,6 +53,8 @@ public:
 	TSubclassOf<UGeneratorUI> GeneratorUIClass;
 
 	void InitGenerators();
+
+	FString CurrentSelectedGenerator = "None";
 protected:
 	virtual void OnStart() override;
 };

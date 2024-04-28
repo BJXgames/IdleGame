@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "UpgradeUI.generated.h"
 
+class UMainGameInstance;
 class UMainWorldSubsystem;
 class UTextBlock;
 class AMainPlayerController;
@@ -16,14 +17,36 @@ class IDLEGAME_API UUpgradeUI : public UUserWidget
 
 	UPROPERTY()
 	UMainWorldSubsystem* WorldSubsystem;
+	
+	UPROPERTY()
+	UMainGameInstance* MainGameInstance;
 
 protected:
 	virtual void NativeConstruct() override;
 
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
-	UTextBlock* SpeedUpgradePrice;
+	UTextBlock* SpeedUpgradePriceText;
 
-	void UpdateText();
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UTextBlock* GenNameText;
+
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UTextBlock* GenQuantityText;
+
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UTextBlock* GenIncomeText;
+
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UTextBlock* GenSpeedText;
+
+public:
+	void UpdateGenText(double Quantity, double MaxTime, double Income, FString GenName);
+
+	UFUNCTION(BlueprintCallable)
+	void UpgradeSpeed();
+
+	UPROPERTY()
+	double SpeedPrice = 1;
 
 	
 	

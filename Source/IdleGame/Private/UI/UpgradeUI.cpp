@@ -2,17 +2,40 @@
 
 
 #include "UI/UpgradeUI.h"
+
+#include "MainGameInstance.h"
 #include "MainWorldSubsystem.h"
+#include "Components/TextBlock.h"
 
 void UUpgradeUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 	WorldSubsystem = GetWorld()->GetSubsystem<UMainWorldSubsystem>();
+	MainGameInstance = GetGameInstance<UMainGameInstance>();
+	
+	SpeedUpgradePriceText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(SpeedPrice)));
 }
 
-void UUpgradeUI::UpdateText()
+void UUpgradeUI::UpdateGenText(double Quantity, double MaxTime, double Income, FString GenName)
 {
-	
+	GenIncomeText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(Income * (1 / MaxTime) * Quantity)));
+	GenQuantityText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(Quantity)));
+	GenSpeedText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(MaxTime) + "s"));
+	GenNameText->SetText(FText::FromString(GenName)); 
+}
+
+void UUpgradeUI::UpgradeSpeed()
+{
+	if(MainGameInstance->Money >= SpeedPrice)
+	{
+		MainGameInstance->Money -= SpeedPrice;
+		SpeedPrice *= 10;
+		SpeedUpgradePriceText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(SpeedPrice)));
+	}
+	else
+	{
+		 return;
+	}
 }
 
 
