@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "MainPlayerController.generated.h"
 
+class UMainGameInstance;
 class UUpgradeUI;
 class UAfkUI;
 class UMainUI;
@@ -13,6 +14,9 @@ UCLASS()
 class IDLEGAME_API AMainPlayerController : public APlayerController
 {
 	GENERATED_BODY()
+
+	UPROPERTY()
+	UMainGameInstance* MainGameInstance;
 	
 protected:
 	virtual void BeginPlay() override;

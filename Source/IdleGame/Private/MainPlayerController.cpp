@@ -2,6 +2,8 @@
 
 
 #include "MainPlayerController.h"
+
+#include "MainGameInstance.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/AfkUI.h"
 #include "UI/MainUI.h"
@@ -11,13 +13,18 @@ void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	MainGameInstance = GetGameInstance<UMainGameInstance>();
+
 	MainUI = CreateWidget<UMainUI>(GetWorld(), MainUIClass);
 	check(MainUI)
 	MainUI->AddToViewport();
 
-	AfkUI = CreateWidget<UAfkUI>(GetWorld(), AfkUIClass);
-	check(AfkUI)
-	AfkUI->AddToViewport();
+	if(MainGameInstance->DataToLoad)
+	{
+		AfkUI = CreateWidget<UAfkUI>(GetWorld(), AfkUIClass);
+		check(AfkUI)
+		AfkUI->AddToViewport();
+	}
 
 	UpgradeUI = CreateWidget<UUpgradeUI>(GetWorld(), UpgradeUIClass);
 	check(UpgradeUI)

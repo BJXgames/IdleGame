@@ -171,6 +171,7 @@ void UMainUI::UpdateIncomePerSecond()
 void UMainUI::NativeConstruct()
 {
 	Super::NativeConstruct();
+	MainGameInstance = GetGameInstance<UMainGameInstance>();
 	WorldSubsystem = GetWorld()->GetSubsystem<UMainWorldSubsystem>();
 	AddGeneratorToTheScrollBox();
 	
@@ -179,8 +180,6 @@ void UMainUI::NativeConstruct()
 void UMainUI::NativePreConstruct()
 {
 	Super::NativePreConstruct();
-
-	MainGameInstance = GetGameInstance<UMainGameInstance>();
 }
 
 

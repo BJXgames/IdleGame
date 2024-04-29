@@ -118,46 +118,54 @@ void UMainGameInstance::LoadGame()
         StartMoney = Money;
         
         double TotalOfflineTime = CalculateOfflineTime();
-        
-        // Load data for each generator
-        for (int32 i = 0; i < NumberOfGenerators; i++)
+
+        if(DataToLoad->Gens.GeneratorNames.Num() > 0)
         {
-            UGeneratorUI* NewGenerator = CreateWidget<UGeneratorUI>(GetWorld(), GeneratorUIClass);
-            if (NewGenerator)
+            // Load data for each generator
+            for (int32 i = 0; i < NumberOfGenerators; i++)
             {
-                // Set the saved data to the new generator instance
-                NewGenerator->GeneratorData.GeneratorName = DataToLoad->Gens.GeneratorNames[i];
-                NewGenerator->GeneratorData.Quantity = DataToLoad->Gens.Quantities[i];
-                NewGenerator->GeneratorData.Income = DataToLoad->Gens.Incomes[i];
-                NewGenerator->GeneratorData.MoneyCost = DataToLoad->Gens.MoneyCosts[i];
-                NewGenerator->GeneratorData.ProductCost = DataToLoad->Gens.ProductCosts[i];
-                NewGenerator->GeneratorData.MaxTime = DataToLoad->Gens.MaxTimes[i];
-
-                if(i > 0)
+                UGeneratorUI* NewGenerator = CreateWidget<UGeneratorUI>(GetWorld(), GeneratorUIClass);
+                if (NewGenerator)
                 {
-                    NewGenerator->Product = Generators[i - 1];
-                }
+                    // Set the saved data to the new generator instance
+                    NewGenerator->GeneratorData.GeneratorName = DataToLoad->Gens.GeneratorNames[i];
+                    NewGenerator->GeneratorData.Quantity = DataToLoad->Gens.Quantities[i];
+                    NewGenerator->GeneratorData.Income = DataToLoad->Gens.Incomes[i];
+                    NewGenerator->GeneratorData.MoneyCost = DataToLoad->Gens.MoneyCosts[i];
+                    NewGenerator->GeneratorData.ProductCost = DataToLoad->Gens.ProductCosts[i];
+                    NewGenerator->GeneratorData.MaxTime = DataToLoad->Gens.MaxTimes[i];
 
-                if (NewGenerator->GeneratorData.Quantity > 0)
-                {
-                    // Calculate the income generated during the offline time and add it immediately
-                    double TimesTriggered = TotalOfflineTime / NewGenerator->GeneratorData.MaxTime;
-                    if (NewGenerator->Product)
+                    if(i > 0)
                     {
-                        NewGenerator->Product->GeneratorData.Quantity += NewGenerator->GeneratorData.Income * NewGenerator->GeneratorData.Quantity * TimesTriggered;
+                        NewGenerator->Product = Generators[i - 1];
                     }
-                    else
-                    {
-                        Money += NewGenerator->GeneratorData.Income * NewGenerator->GeneratorData.Quantity * TimesTriggered;
-                    }
-                }
 
-                // UE_LOG(LogTemp, Warning, TEXT("loaded gen quantity: %.0LF"), NewGenerator->GeneratorData.Quantity)
+                    if (NewGenerator->GeneratorData.Quantity > 0)
+                    {
+                        // Calculate the income generated during the offline time and add it immediately
+                        double TimesTriggered = TotalOfflineTime / NewGenerator->GeneratorData.MaxTime;
+                        if (NewGenerator->Product)
+                        {
+                            NewGenerator->Product->GeneratorData.Quantity += NewGenerator->GeneratorData.Income * NewGenerator->GeneratorData.Quantity * TimesTriggered;
+                        }
+                        else
+                        {
+                            Money += NewGenerator->GeneratorData.Income * NewGenerator->GeneratorData.Quantity * TimesTriggered;
+                        }
+                    }
+
+                    // UE_LOG(LogTemp, Warning, TEXT("loaded gen quantity: %.0LF"), NewGenerator->GeneratorData.Quantity)
                 
-                // Add the new generator to the Generators array
-                Generators.Add(NewGenerator);
+                    // Add the new generator to the Generators array
+                    Generators.Add(NewGenerator);
+                }
             }
         }
+        else
+        {
+            InitGenerators();
+        }
+        
     }
     else
     {

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
-#include "UI/GeneratorUI.h"
 #include "IdleGameSave.generated.h"
 
 class UGeneratorUI;

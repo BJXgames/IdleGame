@@ -85,6 +85,10 @@ void UGeneratorUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 void UGeneratorUI::NativeConstruct()
 {
     Super::NativeConstruct();
+    WorldSubsystem = GetWorld()->GetSubsystem<UMainWorldSubsystem>();
+    MainGameInstance = GetGameInstance<UMainGameInstance>();
+    PlayerController = GetWorld()->GetFirstPlayerController<AMainPlayerController>();
+    
     ProgressBar->SetPercent(0);
     UpdateUIDisplays();
     
@@ -93,9 +97,6 @@ void UGeneratorUI::NativeConstruct()
 void UGeneratorUI::NativePreConstruct()
 {
     Super::NativePreConstruct();
-    WorldSubsystem = GetWorld()->GetSubsystem<UMainWorldSubsystem>();
-    MainGameInstance = GetGameInstance<UMainGameInstance>();
-    PlayerController = GetWorld()->GetFirstPlayerController<AMainPlayerController>();
     
 }
 
