@@ -30,6 +30,9 @@ struct FGeneratorSaveData
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<double> MaxTimes;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<double> SpeedPrices;
 };
 
 UCLASS()

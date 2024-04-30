@@ -13,7 +13,7 @@
 
 void UGeneratorUI::Buy()
 {
-    
+    PlayerController->UpgradeUI->CurrentGenerator = this;
     if (Product && BuyMultiplier * GeneratorData.MoneyCost <= MainGameInstance->Money && BuyMultiplier * GeneratorData.ProductCost <= Product->GeneratorData.Quantity)
     {
         MainGameInstance->Money -= BuyMultiplier * GeneratorData.MoneyCost;
@@ -89,6 +89,7 @@ void UGeneratorUI::NativeConstruct()
     MainGameInstance = GetGameInstance<UMainGameInstance>();
     PlayerController = GetWorld()->GetFirstPlayerController<AMainPlayerController>();
     
+    
     ProgressBar->SetPercent(0);
     UpdateUIDisplays();
     
@@ -129,7 +130,7 @@ void UGeneratorUI::OpenUpgradeWidget()
 {
     //UE_LOG(LogTemp, Warning, TEXT("Selected Generator: %s"), *MainGameInstance->CurrentSelectedGenerator)
     //UE_LOG(LogTemp, Warning, TEXT("Clicked on Generator: %s"), *GeneratorData.GeneratorName)
-    
+    PlayerController->UpgradeUI->CurrentGenerator = this;
     if(PlayerController->UpgradeUI->IsVisible())
     {
         if(GeneratorData.GeneratorName == MainGameInstance->CurrentSelectedGenerator)

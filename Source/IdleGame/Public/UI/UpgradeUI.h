@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "UpgradeUI.generated.h"
 
+class UGeneratorUI;
 class UMainGameInstance;
 class UMainWorldSubsystem;
 class UTextBlock;
@@ -46,7 +47,7 @@ public:
 	void UpgradeSpeed();
 
 	UPROPERTY()
-	double SpeedPrice = 1;
+	UGeneratorUI* CurrentGenerator;
 
 	
 	

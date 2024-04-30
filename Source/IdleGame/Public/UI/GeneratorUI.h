@@ -32,6 +32,9 @@ struct FGeneratorData
 	
 	UPROPERTY(VisibleAnywhere)
 	double MaxTime;
+
+	UPROPERTY(VisibleAnywhere)
+	double SpeedPrice;
 	
 	UPROPERTY(VisibleAnywhere)
 	FString GeneratorName;

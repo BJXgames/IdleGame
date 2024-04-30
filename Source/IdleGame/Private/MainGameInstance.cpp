@@ -49,6 +49,7 @@ void UMainGameInstance::InitGenerators()
         NewGenerator->GeneratorData.ProductCost = (i == 0) ? 0 : i * (3 + i);
         NewGenerator->GeneratorData.MaxTime = (i == 0) ? 1 : i * 2;
         NewGenerator->GeneratorData.GeneratorName = FString::Printf(TEXT("Gen %d"), i + 1);
+        NewGenerator->GeneratorData.SpeedPrice = 1;
 
         if(i > 0)
         {
@@ -91,6 +92,7 @@ void UMainGameInstance::SaveGame()
                 DataToSave->Gens.MoneyCosts.Add(Generators[i]->GeneratorData.MoneyCost);
                 DataToSave->Gens.ProductCosts.Add(Generators[i]->GeneratorData.ProductCost);
                 DataToSave->Gens.MaxTimes.Add(Generators[i]->GeneratorData.MaxTime);
+                DataToSave->Gens.SpeedPrices.Add(Generators[i]->GeneratorData.SpeedPrice);
 
                 // UE_LOG(LogTemp, Warning, TEXT("saved gen quantity: %.0LF"), DataToSave->Gens.Quantities[i])
             }
@@ -134,6 +136,7 @@ void UMainGameInstance::LoadGame()
                     NewGenerator->GeneratorData.MoneyCost = DataToLoad->Gens.MoneyCosts[i];
                     NewGenerator->GeneratorData.ProductCost = DataToLoad->Gens.ProductCosts[i];
                     NewGenerator->GeneratorData.MaxTime = DataToLoad->Gens.MaxTimes[i];
+                    NewGenerator->GeneratorData.SpeedPrice = DataToLoad->Gens.SpeedPrices[i];
 
                     if(i > 0)
                     {
