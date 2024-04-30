@@ -25,6 +25,7 @@ void UMainUI::buyx1()
 	for(UGeneratorUI* Generator : MainGameInstance->Generators)
 	{
 		Generator->BuyMultiplier = 1;
+		
 	}
 	
 }
@@ -36,6 +37,15 @@ void UMainUI::buyx5()
 	for(UGeneratorUI* Generator : MainGameInstance->Generators)
 	{
 		Generator->BuyMultiplier = 5;
+		
+		/*CalculateMoneyCostAmount = Generator->GeneratorData.MoneyCost;
+		int i = 0;
+		while (i < 5)
+		{
+			CalculateMoneyCostAmount = CalculateMoneyCostAmount * Generator->GeneratorCostMultiplier;
+			Generator->MoneyCost += CalculateMoneyCostAmount;
+			i++;
+		}*/
 	}
 }
 

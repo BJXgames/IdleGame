@@ -19,6 +19,7 @@ void UGeneratorUI::Buy()
         MainGameInstance->Money -= BuyMultiplier * GeneratorData.MoneyCost;
         Product->GeneratorData.Quantity -= BuyMultiplier * GeneratorData.ProductCost;
         GeneratorData.Quantity += BuyMultiplier;
+        GeneratorData.MoneyCost *= GeneratorCostMultiplier;
         
         if(GeneratorData.Quantity == BuyMultiplier)
         {
@@ -27,11 +28,13 @@ void UGeneratorUI::Buy()
         
         UpdateBuyButtonState();
         GenerateIncome();
+        
     }
     else
     {
         MainGameInstance->Money -= GeneratorData.MoneyCost * BuyMultiplier;
         GeneratorData.Quantity += BuyMultiplier;
+        GeneratorData.MoneyCost *= GeneratorCostMultiplier;
 
         UpdateBuyButtonState();
         GenerateIncome();

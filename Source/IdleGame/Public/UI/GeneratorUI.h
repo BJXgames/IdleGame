@@ -89,6 +89,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Multiplier")
 	double BuyMultiplier = 1;
 
+	UPROPERTY(EditAnywhere, Category = "Multiplier")
+	double GeneratorCostMultiplier = 1.21;
+
+	UPROPERTY(VisibleAnywhere)
+	double MoneyCost = 0;
+
 protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual void NativeConstruct() override;
