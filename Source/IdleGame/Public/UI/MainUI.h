@@ -40,9 +40,6 @@ class IDLEGAME_API UMainUI : public UUserWidget
 	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
 	UUniformGridPanel* UniformGrid;
 
-	
-	double CalculateMoneyCostAmount = 0;
-
 protected:
 	
 	UFUNCTION(BlueprintCallable)
@@ -81,7 +78,5 @@ public:
 	void buyxMax();
 
 	void UpdateBuyMultiplier();
-
-	
 	
 };
