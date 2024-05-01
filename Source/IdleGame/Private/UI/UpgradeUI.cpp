@@ -18,7 +18,7 @@ void UUpgradeUI::UpdateGenText(double Quantity, double MaxTime, double Income, F
 {
 	GenIncomeText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(Income * (1 / MaxTime) * Quantity)));
 	GenQuantityText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(Quantity)));
-	GenSpeedText->SetText(FText::FromString(WorldSubsystem->FormatNumber(MaxTime) + "s"));
+	GenSpeedText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(MaxTime) + "s"));
 	GenNameText->SetText(FText::FromString(GenName));
 	SpeedUpgradePriceText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(CurrentGenerator->GeneratorData.SpeedPrice)));
 
@@ -34,7 +34,7 @@ void UUpgradeUI::UpgradeSpeed()
 			MainGameInstance->Money -= CurrentGenerator->GeneratorData.SpeedPrice;
 			CurrentGenerator->GeneratorData.SpeedPrice *= 50;
 			SpeedUpgradePriceText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(CurrentGenerator->GeneratorData.SpeedPrice)));
-			CurrentGenerator->GeneratorData.MaxTime -= 0.05;
+			CurrentGenerator->GeneratorData.MaxTime -= 0.1;
 			UpdateGenText(CurrentGenerator->GeneratorData.Quantity, CurrentGenerator->GeneratorData.MaxTime, CurrentGenerator->GeneratorData.Income, CurrentGenerator->GeneratorData.GeneratorName);
 
 			if(CurrentGenerator->GeneratorData.MaxTime < 0.14)

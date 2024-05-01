@@ -14,43 +14,71 @@
 void UGeneratorUI::Buy()
 {
     PlayerController->UpgradeUI->CurrentGenerator = this;
-    if (Product && BuyMultiplier * GeneratorData.MoneyCost <= MainGameInstance->Money && BuyMultiplier * GeneratorData.ProductCost <= Product->GeneratorData.Quantity)
+    MainGameInstance->bIsBought = true;
+    
+    int i = 0;
+    while (i < BuyMultiplier)
     {
-        MainGameInstance->Money -= BuyMultiplier * GeneratorData.MoneyCost;
-        Product->GeneratorData.Quantity -= BuyMultiplier * GeneratorData.ProductCost;
-        GeneratorData.Quantity += BuyMultiplier;
-        
-        if(GeneratorData.Quantity == BuyMultiplier)
+        if (Product && GeneratorData.MoneyCost <= MainGameInstance->Money && GeneratorData.ProductCost <= Product->GeneratorData.Quantity)
         {
-            Time = 0;
-        }
+            MainGameInstance->Money -= GeneratorData.MoneyCost;
+            Product->GeneratorData.Quantity -= GeneratorData.ProductCost;
+            GeneratorData.Quantity += 1;
+            GeneratorData.MoneyCost *= GeneratorCostMultiplier;
         
-        UpdateBuyButtonState();
-        GenerateIncome();
-    }
-    else
-    {
-        MainGameInstance->Money -= GeneratorData.MoneyCost * BuyMultiplier;
-        GeneratorData.Quantity += BuyMultiplier;
+            if(GeneratorData.Quantity == 1)
+            {
+                Time = 0;
+            }
+        
+            UpdateBuyButtonState();
+            GenerateIncome();
+        }
+        else
+        {
+            MainGameInstance->Money -= GeneratorData.MoneyCost;
+            GeneratorData.Quantity += 1;
+            GeneratorData.MoneyCost *= GeneratorCostMultiplier;
 
-        UpdateBuyButtonState();
-        GenerateIncome();
+            UpdateBuyButtonState();
+            GenerateIncome();
+        }
+
+        i++;
     }
+    
     PlayerController->UpgradeUI->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime, GeneratorData.Income, GeneratorData.GeneratorName);
 }
 
 void UGeneratorUI::UpdateBuyButtonState()
 {
-    if (Product)
+    if(BuyMultiplier != 1)
     {
-        // Disable buy button if not enough product or money
-        BuyButton->SetIsEnabled(GeneratorData.ProductCost * BuyMultiplier <= Product->GeneratorData.Quantity && GeneratorData.MoneyCost * BuyMultiplier <= MainGameInstance->Money);
+        if (Product)
+        {
+            // Disable buy button if not enough product or money
+            BuyButton->SetIsEnabled(GeneratorData.ProductCost <= Product->GeneratorData.Quantity && MoneyCost <= MainGameInstance->Money);
+        }
+        else
+        {
+            // Disable buy button if not enough money
+            BuyButton->SetIsEnabled(MoneyCost <= MainGameInstance->Money);
+        }
     }
     else
     {
-        // Disable buy button if not enough money
-        BuyButton->SetIsEnabled(GeneratorData.MoneyCost * BuyMultiplier <= MainGameInstance->Money);
+        if (Product)
+        {
+            // Disable buy button if not enough product or money
+            BuyButton->SetIsEnabled(GeneratorData.ProductCost <= Product->GeneratorData.Quantity && GeneratorData.MoneyCost <= MainGameInstance->Money);
+        }
+        else
+        {
+            // Disable buy button if not enough money
+            BuyButton->SetIsEnabled(GeneratorData.MoneyCost * BuyMultiplier <= MainGameInstance->Money);
+        }
     }
+    
 }
 
 void UGeneratorUI::GenerateIncome()
@@ -103,11 +131,23 @@ void UGeneratorUI::NativePreConstruct()
 
 void UGeneratorUI::UpdateUIDisplays()
 {
-    QuantityDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Quantity)));
-    IncomeDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Income)));
-    MoneyCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.MoneyCost * BuyMultiplier)));
-    ProductCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.ProductCost * BuyMultiplier)));
-    NameDisplay->SetText(FText::FromString(GeneratorData.GeneratorName));
+    if(BuyMultiplier != 1)
+    {
+        QuantityDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Quantity)));
+        IncomeDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Income)));
+        MoneyCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(MoneyCost)));
+        ProductCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.ProductCost)));
+        NameDisplay->SetText(FText::FromString(GeneratorData.GeneratorName));
+    }
+    else
+    {
+        QuantityDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Quantity)));
+        IncomeDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Income)));
+        MoneyCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.MoneyCost)));
+        ProductCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.ProductCost)));
+        NameDisplay->SetText(FText::FromString(GeneratorData.GeneratorName));
+    }
+    
 }
 
 void UGeneratorUI::CheckIncomeGeneration()

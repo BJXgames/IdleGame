@@ -55,6 +55,8 @@ public:
 	void InitGenerators();
 
 	FString CurrentSelectedGenerator = "None";
+
+	bool bIsBought;
 protected:
 	virtual void OnStart() override;
 };
