@@ -45,7 +45,7 @@ void UMainGameInstance::InitGenerators()
         UGeneratorUI* NewGenerator = CreateWidget<UGeneratorUI>(GetWorld(), GeneratorUIClass);
         NewGenerator->GeneratorData.Income = (i == 0) ? 1 : (i + 1) * 1;
         NewGenerator->GeneratorData.Quantity = (i == 0) ? 1 : 0;
-        NewGenerator->GeneratorData.MoneyCost = (i == 0) ? 10 : (i + 1) * 5 * 8 * 10;
+        NewGenerator->GeneratorData.MoneyCost = (i == 0) ? 10 : (i * i * i * i * i * 1000);
         NewGenerator->GeneratorData.ProductCost = (i == 0) ? 0 : i * (3 + i);
         NewGenerator->GeneratorData.MaxTime = (i == 0) ? 1 : i * 2;
         NewGenerator->GeneratorData.GeneratorName = FString::Printf(TEXT("Gen %d"), i + 1);
