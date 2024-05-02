@@ -57,7 +57,4 @@ public:
 	
 	UFUNCTION()
 	FString FormatLargeNumber(double Number);
-
-	UFUNCTION()
-	FString FormatNumber(double Number);
 };

@@ -16,14 +16,26 @@ void UMainUI::UpdateBuyMultiplier()
 	{
 		buyxMax();
 	}
+	if (bIsbuyx5Active)
+	{
+		buyx5();
+	}
+	if (bIsbuyx10Active)
+	{
+		buyx10();
+	}
 }
 
 void UMainUI::buyx1()
 {
+	bIsbuyx1Active = true;
+	bIsbuyx5Active = false;
+	bIsbuyx10Active = false;
 	bIsbuyMaxActive = false;
 	
 	for(UGeneratorUI* Generator : MainGameInstance->Generators)
 	{
+		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
 		Generator->BuyMultiplier = 1;
 	}
 	
@@ -31,22 +43,61 @@ void UMainUI::buyx1()
 
 void UMainUI::buyx5()
 {
+	bIsbuyx1Active = false;
+	bIsbuyx10Active = false;
 	bIsbuyMaxActive = false;
-	
-	for(UGeneratorUI* Generator : MainGameInstance->Generators)
+
+	if (bIsbuyx5Active && !MainGameInstance->bIsBought)
 	{
-		Generator->BuyMultiplier = 5;
+		return;
 	}
+	
+	bIsbuyx5Active = true;
+	for (UGeneratorUI* Generator : MainGameInstance->Generators)
+	{
+		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
+		Generator->BuyMultiplier = 5;
+		double TempValue = Generator->GeneratorData.MoneyCost;
+
+		int i = 0;
+		while (i < Generator->BuyMultiplier - 1)
+		{
+			TempValue = TempValue * Generator->GeneratorCostMultiplier;
+			Generator->MoneyCost += TempValue;
+			i++;
+		}
+		//UE_LOG(LogTemp, Warning, TEXT("Monecost: %s"), *WorldSubsystem->FormatLargeNumber(Generator->MoneyCost))
+	}
+	MainGameInstance->bIsBought = false;
 }
 
 void UMainUI::buyx10()
 {
+	bIsbuyx1Active = false;
+	bIsbuyx5Active = false;
 	bIsbuyMaxActive = false;
 	
-	for(UGeneratorUI* Generator : MainGameInstance->Generators)
+	if(bIsbuyx10Active && !MainGameInstance->bIsBought)
 	{
-		Generator->BuyMultiplier = 10;
+		return;
 	}
+
+	bIsbuyx10Active = true;
+	for (UGeneratorUI* Generator : MainGameInstance->Generators)
+	{
+		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
+		Generator->BuyMultiplier = 10;
+		double TempValue = Generator->GeneratorData.MoneyCost;
+
+		int i = 0;
+		while (i < Generator->BuyMultiplier - 1)
+		{
+			TempValue = TempValue * Generator->GeneratorCostMultiplier;
+			Generator->MoneyCost += TempValue;
+			i++;
+		}
+	}
+	MainGameInstance->bIsBought = false;
 }
 
 void UMainUI::buyxMax()

@@ -14,28 +14,35 @@
 void UGeneratorUI::Buy()
 {
     PlayerController->UpgradeUI->CurrentGenerator = this;
-    if (Product && BuyMultiplier * GeneratorData.MoneyCost <= MainGameInstance->Money && BuyMultiplier * GeneratorData.ProductCost <= Product->GeneratorData.Quantity)
+    MainGameInstance->bIsBought = true;
+    
+    int i = 0;
+    while (i < BuyMultiplier)
     {
-        MainGameInstance->Money -= BuyMultiplier * GeneratorData.MoneyCost;
-        Product->GeneratorData.Quantity -= BuyMultiplier * GeneratorData.ProductCost;
-        GeneratorData.Quantity += BuyMultiplier;
-        
-        if(GeneratorData.Quantity == BuyMultiplier)
+        if (Product && GeneratorData.MoneyCost <= MainGameInstance->Money && GeneratorData.ProductCost <= Product->GeneratorData.Quantity)
         {
-            Time = 0;
-        }
+            MainGameInstance->Money -= GeneratorData.MoneyCost;
+            Product->GeneratorData.Quantity -= GeneratorData.ProductCost;
+            GeneratorData.Quantity += 1;
+            GeneratorData.MoneyCost *= GeneratorCostMultiplier;
+            
+            if(GeneratorData.Quantity == 1)
+            {
+                Time = 0;
+            }
         
-        UpdateBuyButtonState();
-        GenerateIncome();
+            UpdateBuyButtonState();
+            GenerateIncome();
+        }
+        else
+        {
+            MainGameInstance->Money -= GeneratorData.MoneyCost;
+            GeneratorData.Quantity += 1;
+            GeneratorData.MoneyCost *= GeneratorCostMultiplier;
+        }
+        i++;
     }
-    else
-    {
-        MainGameInstance->Money -= GeneratorData.MoneyCost * BuyMultiplier;
-        GeneratorData.Quantity += BuyMultiplier;
-
-        UpdateBuyButtonState();
-        GenerateIncome();
-    }
+    
     PlayerController->UpgradeUI->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime, GeneratorData.Income, GeneratorData.GeneratorName);
 }
 
