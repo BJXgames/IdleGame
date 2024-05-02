@@ -43,13 +43,13 @@ void UMainGameInstance::InitGenerators()
     for (int32 i = 0; i < NumberOfGenerators; i++)
     {
         UGeneratorUI* NewGenerator = CreateWidget<UGeneratorUI>(GetWorld(), GeneratorUIClass);
-        NewGenerator->GeneratorData.Income = 1;
+        NewGenerator->GeneratorData.Income = (i == 0) ? 1 : (i + 1) * 1;
         NewGenerator->GeneratorData.Quantity = (i == 0) ? 1 : 0;
         NewGenerator->GeneratorData.MoneyCost = (i == 0) ? 10 : (i * i * i * i * i * 1000);
         NewGenerator->GeneratorData.ProductCost = (i == 0) ? 0 : i * (3 + i);
         NewGenerator->GeneratorData.MaxTime = (i == 0) ? 1 : i * 2;
         NewGenerator->GeneratorData.GeneratorName = FString::Printf(TEXT("Gen %d"), i + 1);
-        NewGenerator->GeneratorData.SpeedPrice = 100;
+        NewGenerator->GeneratorData.SpeedPrice = 1;
 
         if(i > 0)
         {
