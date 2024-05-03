@@ -102,45 +102,33 @@ void UMainUI::buyx10()
 
 void UMainUI::buyxMax()
 {
-	bIsbuyMaxActive = true;
-	
-	for(int32 i = 0; i < MainGameInstance->Generators.Num(); i++)
+	bIsbuyx1Active = false;
+	bIsbuyx5Active = false;
+	bIsbuyx10Active = false;
+    
+	if (bIsbuyMaxActive && !MainGameInstance->bIsBought)
 	{
-		UGeneratorUI* CurrentGenerator = MainGameInstance->Generators[i];
-        
-		if (CurrentGenerator)
+		return;
+	}
+
+	bIsbuyMaxActive = true;
+	for (UGeneratorUI* Generator : MainGameInstance->Generators)
+	{
+		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
+
+		double TempValue = Generator->GeneratorData.MoneyCost;
+
+		int i = 0;
+		while (TempValue < MainGameInstance->Money)
 		{
-			// Check if the generator is a product of another generator
-			if (CurrentGenerator->Product)
-			{
-				// Check if the product cost is less than the quantity of the parent generator
-				if (CurrentGenerator->GeneratorData.ProductCost < CurrentGenerator->Product->GeneratorData.Quantity)
-				{
-					if(FMath::Floor(MainGameInstance->Money / CurrentGenerator->GeneratorData.MoneyCost) >= 1)
-					{
-						CurrentGenerator->BuyMultiplier = FMath::Floor(FMath::Min(MainGameInstance->Money / CurrentGenerator->GeneratorData.MoneyCost, CurrentGenerator->Product->GeneratorData.Quantity / CurrentGenerator->GeneratorData.ProductCost)); 
-					}
-					else
-					{
-						CurrentGenerator->BuyMultiplier = 1;
-					}
-				}
-				else
-				{
-					// Player can only afford one if the product cost is higher than the parent's quantity
-					CurrentGenerator->BuyMultiplier = 1;
-				}
-			}
-			else
-			{
-				// Calculate the maximum affordable quantity based on money
-				CurrentGenerator->BuyMultiplier = FMath::Floor(MainGameInstance->Money / CurrentGenerator->GeneratorData.MoneyCost);
-			}
-            
-			// Ensure the multiplier is not negative
-			CurrentGenerator->BuyMultiplier = FMath::Max(CurrentGenerator->BuyMultiplier, 1);
+			TempValue = TempValue * Generator->GeneratorCostMultiplier;
+			Generator->MoneyCost += TempValue;
+			Generator->BuyMultiplier = i;
+			i++;
 		}
 	}
+
+	MainGameInstance->bIsBought = false;
 }
 
 void UMainUI::DeleteSave()
