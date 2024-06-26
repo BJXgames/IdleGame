@@ -16,8 +16,6 @@ class IDLEGAME_API UMainGameInstance : public UGameInstance
 
 	UPROPERTY()
 	UMainWorldSubsystem* WorldSubsystem;
-	
-	
 
 public:
 	UMainGameInstance();

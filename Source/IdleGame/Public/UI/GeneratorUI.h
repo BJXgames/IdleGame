@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UpgradeUI.h"
 #include "Blueprint/UserWidget.h"
 #include "GeneratorUI.generated.h"
 
@@ -12,6 +13,7 @@ class UButton;
 class UMainWorldSubsystem;
 class UTextBlock;
 class UProgressBar;
+class UBorder;
 
 USTRUCT(BlueprintType)
 struct FGeneratorData
@@ -54,6 +56,7 @@ class IDLEGAME_API UGeneratorUI : public UUserWidget
 	UPROPERTY()
 	AMainPlayerController* PlayerController;
 
+
 public:
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
 	UProgressBar* ProgressBar;
@@ -75,6 +78,9 @@ public:
 
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
 	UButton* BuyButton;
+
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UBorder* GeneratorBackground;
 	
 	FGeneratorData GeneratorData;
 
@@ -96,6 +102,10 @@ public:
 	double GeneratorCostMultiplier = 1.21;
 
 	double MoneyCost;
+	double ProductCost;
+
+	UFUNCTION(BlueprintCallable)
+	void ToggleUpgradeWidget(UWidgetAnimation* Animation);
 
 protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
@@ -107,8 +117,13 @@ protected:
 	void UpdateProgressBar();
 	void UpdateBuyButtonState();
 
-	UFUNCTION(BlueprintCallable)
-	void OpenUpgradeWidget();
+	UPROPERTY(BlueprintReadOnly)
+	UUpgradeUI* UpgradeUIWidget;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsHiding;
+
+	
 
 	
 	

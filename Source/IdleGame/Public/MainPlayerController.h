@@ -35,5 +35,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = UI)
 	TSubclassOf<UUpgradeUI>  UpgradeUIClass;
 
-	TObjectPtr<UUpgradeUI> UpgradeUI;
+	UPROPERTY()
+	UUpgradeUI* UpgradeUI;
 };

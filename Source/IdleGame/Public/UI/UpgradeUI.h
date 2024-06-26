@@ -49,6 +49,9 @@ public:
 	UPROPERTY()
 	UGeneratorUI* CurrentGenerator;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UWidgetAnimation* ToggleUpgradeWidgetAnimation;
+
 	
 	
 };

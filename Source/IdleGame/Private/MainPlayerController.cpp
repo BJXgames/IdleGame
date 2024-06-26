@@ -14,7 +14,7 @@ void AMainPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	MainGameInstance = GetGameInstance<UMainGameInstance>();
-
+	
 	MainUI = CreateWidget<UMainUI>(GetWorld(), MainUIClass);
 	check(MainUI)
 	MainUI->AddToViewport();
@@ -30,7 +30,17 @@ void AMainPlayerController::BeginPlay()
 	check(UpgradeUI)
 	UpgradeUI->AddToViewport();
 	UpgradeUI->SetVisibility(ESlateVisibility::Collapsed);
+	if (!UpgradeUI)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UpgradeUI creation failed in AMainPlayerController::BeginPlay"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("UpgradeUI created successfully in AMainPlayerController::BeginPlay"));
+	}
+	
 
 	SetInputMode(FInputModeUIOnly());
 	bShowMouseCursor = true;
 }
+

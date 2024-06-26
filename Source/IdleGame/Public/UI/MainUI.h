@@ -28,14 +28,17 @@ class IDLEGAME_API UMainUI : public UUserWidget
 	UPROPERTY()
 	UMainGameInstance* MainGameInstance;
 
+	UPROPERTY()
+	AMainPlayerController* PlayerController;
+
 	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
 	UTextBlock* CurrentMoneyText;
 
 	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
 	UTextBlock* IncomePerSecondText;
 
-	/*UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
-	UScrollBox* ScrollBox;*/
+	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
+	UScrollBox* ScrollBox;
 
 	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
 	UUniformGridPanel* UniformGrid;

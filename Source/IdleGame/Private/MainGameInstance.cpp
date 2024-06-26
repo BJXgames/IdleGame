@@ -5,6 +5,7 @@
 #include "IdleGameSave.h"
 #include "UI/GeneratorUI.h"
 #include "MainWorldSubsystem.h"
+#include "Components/Border.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -29,6 +30,8 @@ double UMainGameInstance::CalculateOfflineTime()
     
     return TimeElapsed;
 }
+
+
 
 UMainGameInstance::UMainGameInstance()
 {
@@ -55,6 +58,15 @@ void UMainGameInstance::InitGenerators()
         {
             NewGenerator->Product = Generators[i - 1];
         }
+
+        if(NewGenerator->GeneratorData.Quantity <=0)
+        {
+            FLinearColor Color = FLinearColor::Black;
+            //NewGenerator->GeneratorBackground->SetBrushColor(Color);
+            NewGenerator->SetIsEnabled(false);
+        }
+
+        //UE_LOG(LogTemp, Warning, TEXT("Loaded Generator %d: Name=%s, Quantity=%.0f"), i, *NewGenerator->GeneratorData.GeneratorName, NewGenerator->GeneratorData.Quantity);
         
         Generators.Add(NewGenerator);
     }
@@ -157,10 +169,17 @@ void UMainGameInstance::LoadGame()
                         }
                     }
 
-                    // UE_LOG(LogTemp, Warning, TEXT("loaded gen quantity: %.0LF"), NewGenerator->GeneratorData.Quantity)
+                    //UE_LOG(LogTemp, Warning, TEXT("Loaded Generator %d: Name=%s, Quantity=%.0f"), i, *NewGenerator->GeneratorData.GeneratorName, NewGenerator->GeneratorData.Quantity);
                 
                     // Add the new generator to the Generators array
                     Generators.Add(NewGenerator);
+                }
+                
+                if(NewGenerator->GeneratorData.Quantity <=0)
+                {
+                    FLinearColor Color = FLinearColor::Black;
+                    //NewGenerator->GeneratorBackground->SetBrushColor(Color);
+                    NewGenerator->SetIsEnabled(false);
                 }
             }
         }
@@ -176,7 +195,6 @@ void UMainGameInstance::LoadGame()
         UE_LOG(LogTemp, Warning, TEXT("Load"))
     }
 }
-
 
 
 void UMainGameInstance::Init()

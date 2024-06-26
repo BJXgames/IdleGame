@@ -4,10 +4,13 @@
 #include "UI/MainUI.h"
 
 #include "MainGameInstance.h"
+#include "MainPlayerController.h"
 #include "MainWorldSubsystem.h"
+#include "Components/ScrollBox.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridPanel.h"
 #include "Kismet/GameplayStatics.h"
+#include "UI/UpgradeUI.h"
 
 
 void UMainUI::UpdateBuyMultiplier()
@@ -37,6 +40,7 @@ void UMainUI::buyx1()
 	{
 		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
 		Generator->BuyMultiplier = 1;
+		Generator->ProductCost = Generator->GeneratorData.ProductCost;
 	}
 	
 }
@@ -51,25 +55,28 @@ void UMainUI::buyx5()
 	{
 		return;
 	}
-	
+
 	bIsbuyx5Active = true;
 	for (UGeneratorUI* Generator : MainGameInstance->Generators)
 	{
 		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
 		Generator->BuyMultiplier = 5;
 		double TempValue = Generator->GeneratorData.MoneyCost;
+		double TempProductCost = Generator->GeneratorData.ProductCost;
+		Generator->ProductCost = TempProductCost;
 
 		int i = 0;
 		while (i < Generator->BuyMultiplier - 1)
 		{
-			TempValue = TempValue * Generator->GeneratorCostMultiplier;
+			TempValue *= Generator->GeneratorCostMultiplier;
 			Generator->MoneyCost += TempValue;
+			Generator->ProductCost += TempProductCost;
 			i++;
 		}
-		//UE_LOG(LogTemp, Warning, TEXT("Monecost: %s"), *WorldSubsystem->FormatLargeNumber(Generator->MoneyCost))
 	}
 	MainGameInstance->bIsBought = false;
 }
+
 
 void UMainUI::buyx10()
 {
@@ -77,7 +84,7 @@ void UMainUI::buyx10()
 	bIsbuyx5Active = false;
 	bIsbuyMaxActive = false;
 	
-	if(bIsbuyx10Active && !MainGameInstance->bIsBought)
+	if (bIsbuyx10Active && !MainGameInstance->bIsBought)
 	{
 		return;
 	}
@@ -88,12 +95,15 @@ void UMainUI::buyx10()
 		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
 		Generator->BuyMultiplier = 10;
 		double TempValue = Generator->GeneratorData.MoneyCost;
+		double TempProductCost = Generator->GeneratorData.ProductCost;
+		Generator->ProductCost = TempProductCost;
 
 		int i = 0;
 		while (i < Generator->BuyMultiplier - 1)
 		{
-			TempValue = TempValue * Generator->GeneratorCostMultiplier;
+			TempValue *= Generator->GeneratorCostMultiplier;
 			Generator->MoneyCost += TempValue;
+			Generator->ProductCost += TempProductCost;
 			i++;
 		}
 	}
@@ -102,34 +112,70 @@ void UMainUI::buyx10()
 
 void UMainUI::buyxMax()
 {
-	bIsbuyx1Active = false;
-	bIsbuyx5Active = false;
-	bIsbuyx10Active = false;
-    
-	if (bIsbuyMaxActive && !MainGameInstance->bIsBought)
-	{
-		return;
-	}
+    bIsbuyx1Active = false;
+    bIsbuyx5Active = false;
+    bIsbuyx10Active = false;
 
-	bIsbuyMaxActive = true;
-	for (UGeneratorUI* Generator : MainGameInstance->Generators)
-	{
-		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
+    bIsbuyMaxActive = true;
 
-		double TempValue = Generator->GeneratorData.MoneyCost;
+    for (UGeneratorUI* Generator : MainGameInstance->Generators)
+    {
+        Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
 
-		int i = 0;
-		while (TempValue < MainGameInstance->Money)
-		{
-			TempValue = TempValue * Generator->GeneratorCostMultiplier;
-			Generator->MoneyCost += TempValue;
-			Generator->BuyMultiplier = i;
-			i++;
-		}
-	}
+        // Calculate how many times you can buy the generator
+        double availableMoney = MainGameInstance->Money;
+        double currentMoneyCost = Generator->GeneratorData.MoneyCost;
+        double currentProductCost = Generator->GeneratorData.ProductCost;
+    	Generator->ProductCost = currentProductCost;
+        int buyCount = 0;
 
-	MainGameInstance->bIsBought = false;
+    	if(Generator->Product)
+    	{
+    		double availableProductQuantity = Generator->Product->GeneratorData.Quantity;
+    		
+    		while (availableMoney >= currentMoneyCost && availableProductQuantity >= currentProductCost)
+    		{
+    			availableMoney -= currentMoneyCost;
+    			availableProductQuantity -= currentProductCost;
+    			buyCount++;
+    			currentMoneyCost *= Generator->GeneratorCostMultiplier;
+    			currentProductCost += Generator->GeneratorData.ProductCost;
+    		}
+    	}
+        else
+        {
+        	while (availableMoney >= currentMoneyCost)
+        	{
+        		availableMoney -= currentMoneyCost;
+        		buyCount++;
+        		currentMoneyCost *= Generator->GeneratorCostMultiplier;
+        	}
+        }
+        
+
+        Generator->BuyMultiplier = buyCount;
+
+        // If we can buy at least one, update the MoneyCost and ProductCost to reflect the cumulative cost of buyCount purchases
+        if (buyCount > 0)
+        {
+            Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
+            Generator->ProductCost = Generator->GeneratorData.ProductCost;
+            double tempMoneyValue = Generator->GeneratorData.MoneyCost;
+            double tempProductValue = Generator->GeneratorData.ProductCost;
+
+            for (int i = 1; i < buyCount; i++)
+            {
+                tempMoneyValue *= Generator->GeneratorCostMultiplier;
+                Generator->MoneyCost += tempMoneyValue;
+                Generator->ProductCost += tempProductValue;
+            }
+        }
+    }
+
+    MainGameInstance->bIsBought = false;
 }
+
+
 
 void UMainUI::DeleteSave()
 {
@@ -137,6 +183,9 @@ void UMainUI::DeleteSave()
 	UGameplayStatics::DeleteGameInSlot("Slot1", 0);
 	MainGameInstance->CreateSaveFile();
 	AddGeneratorToTheScrollBox();
+	UpdateIncomePerSecond();
+	PlayerController->UpgradeUI->SetVisibility(ESlateVisibility::Collapsed);
+	buyx1();
 	
 }
 
@@ -210,7 +259,9 @@ void UMainUI::UpdateIncomePerSecond()
 void UMainUI::NativeConstruct()
 {
 	Super::NativeConstruct();
+	
 	MainGameInstance = GetGameInstance<UMainGameInstance>();
+	PlayerController = GetWorld()->GetFirstPlayerController<AMainPlayerController>();
 	WorldSubsystem = GetWorld()->GetSubsystem<UMainWorldSubsystem>();
 	AddGeneratorToTheScrollBox();
 	
