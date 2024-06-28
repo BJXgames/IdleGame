@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "MainPlayerController.generated.h"
 
+class UManagerPanelUI;
 class UMainGameInstance;
 class UUpgradeUI;
 class UAfkUI;
@@ -37,4 +38,10 @@ public:
 
 	UPROPERTY()
 	UUpgradeUI* UpgradeUI;
+
+	UPROPERTY(EditAnywhere, Category = UI)
+	TSubclassOf<UManagerPanelUI>  ManagerPanelUIClass;
+
+	UPROPERTY()
+	UManagerPanelUI* ManagerPanelUI;
 };

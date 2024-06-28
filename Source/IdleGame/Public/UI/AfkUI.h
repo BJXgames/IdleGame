@@ -28,6 +28,9 @@ class IDLEGAME_API UAfkUI : public UUserWidget
 
 	UPROPERTY()
 	UMainGameInstance* MainGameInstance;
+
+	UPROPERTY()
+	AMainPlayerController* PlayerController;
 	
 protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
@@ -45,9 +48,6 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
 	UBackgroundBlur* BackgroundBlur;
-
-	UPROPERTY()
-	AMainPlayerController* PlayerController;
 
 	FLargeNumber OfflineEarningAmount = FLargeNumber(0.0, 0);
 	

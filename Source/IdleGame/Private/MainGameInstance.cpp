@@ -7,6 +7,7 @@
 #include "MainWorldSubsystem.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Engine/DataTable.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -34,6 +35,12 @@ float UMainGameInstance::CalculateOfflineTime()
 UMainGameInstance::UMainGameInstance()
 {
     Money = FLargeNumber(1.0, 0);
+
+    static ConstructorHelpers::FObjectFinder<UDataTable> ManagerDataTableObj(TEXT("/Game/Data/ManagerDataTable"));
+    if (ManagerDataTableObj.Succeeded())
+    {
+        ManagerDataTable = ManagerDataTableObj.Object;
+    }
 }
 
 void UMainGameInstance::InitGenerators()
@@ -198,6 +205,33 @@ void UMainGameInstance::LoadGame()
         CreateSaveFile();
         UE_LOG(LogTemp, Warning, TEXT("Load"))
     }
+}
+
+TArray<FManagerData> UMainGameInstance::GetAllManagers() const
+{
+    TArray<FManagerData> Managers;
+    if (ManagerDataTable)
+    {
+        TArray<FName> RowNames = ManagerDataTable->GetRowNames();
+        for (auto& Name : RowNames)
+        {
+            FManagerData* Row = ManagerDataTable->FindRow<FManagerData>(Name, TEXT(""));
+            if (Row)
+            {
+                Managers.Add(*Row);
+            }
+        }
+    }
+    return Managers;
+}
+
+FManagerData* UMainGameInstance::GetManagerByName(FName ManagerName) const
+{
+    if (ManagerDataTable)
+    {
+        return ManagerDataTable->FindRow<FManagerData>(ManagerName, TEXT(""));
+    }
+    return nullptr;
 }
 
 

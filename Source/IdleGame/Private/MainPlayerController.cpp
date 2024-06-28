@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "UI/AfkUI.h"
 #include "UI/MainUI.h"
+#include "UI/ManagerPanelUI.h"
 #include "UI/UpgradeUI.h"
 
 void AMainPlayerController::BeginPlay()
@@ -30,14 +31,11 @@ void AMainPlayerController::BeginPlay()
 	check(UpgradeUI)
 	UpgradeUI->AddToViewport();
 	UpgradeUI->SetVisibility(ESlateVisibility::Collapsed);
-	if (!UpgradeUI)
-	{
-		UE_LOG(LogTemp, Error, TEXT("UpgradeUI creation failed in AMainPlayerController::BeginPlay"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("UpgradeUI created successfully in AMainPlayerController::BeginPlay"));
-	}
+
+	ManagerPanelUI = CreateWidget<UManagerPanelUI>(GetWorld(), ManagerPanelUIClass);
+	check(ManagerPanelUI)
+	ManagerPanelUI->AddToViewport();
+	ManagerPanelUI->SetVisibility(ESlateVisibility::Collapsed);
 	
 
 	SetInputMode(FInputModeUIOnly());

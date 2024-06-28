@@ -45,6 +45,7 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
 	UButton* SpeedUpgradeButton;
 
+
 public:
 	void UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLargeNumber Income, FString GenName);
 

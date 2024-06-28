@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "MainWorldSubsystem.h"
 #include "Engine/GameInstance.h"
+#include "Data/ManagerData.h"
 #include "UI/MainUI.h"
 #include "MainGameInstance.generated.h"
 
@@ -56,6 +57,12 @@ public:
 	FString CurrentSelectedGenerator = "None";
 
 	bool bIsBought;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Managers")
+	UDataTable* ManagerDataTable;
+
+	TArray<FManagerData> GetAllManagers() const;
+	FManagerData* GetManagerByName(FName ManagerName) const;
 	
 protected:
 	virtual void OnStart() override;

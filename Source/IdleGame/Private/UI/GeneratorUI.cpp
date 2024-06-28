@@ -136,14 +136,6 @@ void UGeneratorUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		{
 			UpgradeUIWidget = PlayerController->UpgradeUI;
 		}
-		if (!UpgradeUIWidget)
-		{
-			UE_LOG(LogTemp, Error, TEXT("UpgradeUIWidget is null in UGeneratorUI::NativeConstruct"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("PlayerController is null in UGeneratorUI::NativeConstruct"));
 	}
 
 	if(GeneratorData.Quantity.Value > 0)
