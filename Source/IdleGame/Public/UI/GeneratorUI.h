@@ -6,6 +6,7 @@
 #include "MainWorldSubsystem.h"
 #include "UpgradeUI.h"
 #include "Blueprint/UserWidget.h"
+#include "Data/ManagerData.h"
 #include "GeneratorUI.generated.h"
 
 class AMainPlayerController;
@@ -47,6 +48,9 @@ struct FGeneratorData
 	
 	UPROPERTY(VisibleAnywhere)
 	FString GeneratorName;
+
+	UPROPERTY(VisibleAnywhere)
+	FManagerData ManagerData;
 };
 
 UCLASS()
@@ -129,6 +133,9 @@ public:
 	void UpdateBuyButtonState();
 
 	void CheckIfBuyAmountHasBeenReached();
+
+	UFUNCTION(BlueprintCallable)
+	void SelectGenerator();
 
 protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;

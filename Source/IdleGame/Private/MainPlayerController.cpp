@@ -42,3 +42,14 @@ void AMainPlayerController::BeginPlay()
 	bShowMouseCursor = true;
 }
 
+UManagerPanelUI* AMainPlayerController::GetManagerPanelUI() const
+{
+	return ManagerPanelUI;
+}
+
+UUpgradeUI* AMainPlayerController::GetUpgradeUI() const
+{
+	return UpgradeUI;
+}
+
+

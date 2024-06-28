@@ -23,5 +23,25 @@ void UManagerUI::NativeConstruct()
 
 void UManagerUI::OpenManagerPanel()
 {
-	PlayerController->ManagerPanelUI->SetVisibility(ESlateVisibility::Visible);
+	PlayerController->GetManagerPanelUI()->SetVisibility(ESlateVisibility::Visible);
 }
+
+void UManagerUI::UpdateManagerImage(UTexture2D* Image)
+{
+	if (ManagerImage)
+	{
+		if (Image)
+		{
+			FLinearColor TintColor = FLinearColor(1.f, 1.f, 1.f, 1.f);
+			ManagerImage->SetBrushFromTexture(Image);
+			ManagerImage->SetBrushColor(TintColor);
+		}
+		else
+		{
+			FLinearColor TintColor = FLinearColor(1.f, 1.f, 1.f, 0.f);
+			ManagerImage->SetBrushColor(TintColor);
+		}
+	}
+	
+}
+

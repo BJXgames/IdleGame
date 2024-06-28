@@ -6,42 +6,52 @@
 #include "GameFramework/PlayerController.h"
 #include "MainPlayerController.generated.h"
 
-class UManagerPanelUI;
 class UMainGameInstance;
-class UUpgradeUI;
-class UAfkUI;
 class UMainUI;
+class UAfkUI;
+class UUpgradeUI;
+class UManagerPanelUI;
+
 UCLASS()
 class IDLEGAME_API AMainPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	UMainGameInstance* MainGameInstance;
-	
-protected:
+public:
 	virtual void BeginPlay() override;
 
-public:
-	UPROPERTY(EditAnywhere, Category = UI)
-	TSubclassOf<UMainUI>  MainUIClass;
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	UManagerPanelUI* GetManagerPanelUI() const;
 
-	TObjectPtr<UMainUI> MainUI;
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	UUpgradeUI* GetUpgradeUI() const;
 
-	UPROPERTY(EditAnywhere, Category = UI)
-	TSubclassOf<UAfkUI>  AfkUIClass;
 
-	TObjectPtr<UAfkUI> AfkUI;
+private:
+	UPROPERTY()
+	UMainGameInstance* MainGameInstance;
 
-	UPROPERTY(EditAnywhere, Category = UI)
-	TSubclassOf<UUpgradeUI>  UpgradeUIClass;
+	UPROPERTY()
+	UMainUI* MainUI;
+
+	UPROPERTY()
+	UAfkUI* AfkUI;
 
 	UPROPERTY()
 	UUpgradeUI* UpgradeUI;
 
-	UPROPERTY(EditAnywhere, Category = UI)
-	TSubclassOf<UManagerPanelUI>  ManagerPanelUIClass;
-
 	UPROPERTY()
 	UManagerPanelUI* ManagerPanelUI;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UMainUI> MainUIClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UAfkUI> AfkUIClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUpgradeUI> UpgradeUIClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UManagerPanelUI> ManagerPanelUIClass;
 };

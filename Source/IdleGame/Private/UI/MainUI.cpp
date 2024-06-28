@@ -208,7 +208,7 @@ void UMainUI::DeleteSave()
 	MainGameInstance->CreateSaveFile();
 	AddGeneratorToTheScrollBox();
 	UpdateIncomePerSecond();
-	PlayerController->UpgradeUI->SetVisibility(ESlateVisibility::Collapsed);
+	PlayerController->GetUpgradeUI()->SetVisibility(ESlateVisibility::Collapsed);
 	buyx1();
 	
 }

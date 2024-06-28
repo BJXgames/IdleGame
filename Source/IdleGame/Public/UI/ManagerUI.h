@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "ManagerUI.generated.h"
 
+class UGeneratorUI;
 class UManagerPanelUI;
 class AMainPlayerController;
 class UMainGameInstance;
@@ -34,5 +35,8 @@ private:
 
 	UFUNCTION(BlueprintCallable)
 	void OpenManagerPanel();
+
+public:
+	void UpdateManagerImage(UTexture2D* Image);
 	
 };

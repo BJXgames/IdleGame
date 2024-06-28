@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "UpgradeUI.generated.h"
 
+class UManagerUI;
 class UButton;
 class UGeneratorUI;
 class UMainGameInstance;
@@ -45,6 +46,8 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
 	UButton* SpeedUpgradeButton;
 
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UManagerUI* BP_ManagerWidget;
 
 public:
 	void UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLargeNumber Income, FString GenName);
@@ -58,6 +61,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UWidgetAnimation* ToggleUpgradeWidgetAnimation;
 
-	
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	UManagerUI* GetManagerUI() const;
 	
 };

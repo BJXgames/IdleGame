@@ -2,7 +2,7 @@
 
 
 #include "MainGameInstance.h"
-#include "IdleGameSave.h"
+#include "Data/IdleGameSave.h"
 #include "UI/GeneratorUI.h"
 #include "MainWorldSubsystem.h"
 #include "Components/Border.h"
@@ -59,6 +59,7 @@ void UMainGameInstance::InitGenerators()
         NewGenerator->GeneratorData.GeneratorName = FString::Printf(TEXT("Gen %d"), i + 1);
         NewGenerator->GeneratorData.SpeedPrice = FLargeNumber(1.0, 0);
         NewGenerator->GeneratorData.AmountOfGeneratorToBuy = FLargeNumber(100.0, 0);
+        NewGenerator->GeneratorData.ManagerData = FManagerData();
 
         if(i > 0)
         {
@@ -116,6 +117,7 @@ void UMainGameInstance::SaveGame()
         DataToSave->Gens.SpeedPrices.Empty();
         DataToSave->Gens.GeneratorsBought.Empty();
         DataToSave->Gens.AmountOfGeneratorsToBuy.Empty();
+        DataToSave->Gens.ManagerDatas.Empty();
         
         for (int32 i = 0; i < Generators.Num(); i++)
         {
@@ -130,7 +132,8 @@ void UMainGameInstance::SaveGame()
                 DataToSave->Gens.MaxTimes.Add(CurrentGenerator->GeneratorData.MaxTime);
                 DataToSave->Gens.SpeedPrices.Add(CurrentGenerator->GeneratorData.SpeedPrice);
                 DataToSave->Gens.GeneratorsBought.Add(CurrentGenerator->GeneratorData.GeneratorBought); 
-                DataToSave->Gens.AmountOfGeneratorsToBuy.Add(CurrentGenerator->GeneratorData.AmountOfGeneratorToBuy); 
+                DataToSave->Gens.AmountOfGeneratorsToBuy.Add(CurrentGenerator->GeneratorData.AmountOfGeneratorToBuy);
+                DataToSave->Gens.ManagerDatas.Add(CurrentGenerator->GeneratorData.ManagerData);
 
                 //UE_LOG(LogTemp, Warning, TEXT(": %s, GeneratorsBought: %.0f"), *DataToSave->Gens.GeneratorNames[i], DataToSave->Gens.GeneratorsBought[i].Value);
             }
@@ -174,6 +177,7 @@ void UMainGameInstance::LoadGame()
                     NewGenerator->GeneratorData.SpeedPrice = DataToLoad->Gens.SpeedPrices[i];
                     NewGenerator->GeneratorData.GeneratorBought = DataToLoad->Gens.GeneratorsBought[i];
                     NewGenerator->GeneratorData.AmountOfGeneratorToBuy = DataToLoad->Gens.AmountOfGeneratorsToBuy[i];
+                    NewGenerator->GeneratorData.ManagerData = DataToLoad->Gens.ManagerDatas[i];
 
                     if (i > 0)
                     {

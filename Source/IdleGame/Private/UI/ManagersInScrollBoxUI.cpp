@@ -2,7 +2,7 @@
 
 
 #include "UI/ManagersInScrollBoxUI.h"
-
+#include "UI/GeneratorUI.h"
 #include "Components/Image.h"
 
 void UManagersInScrollBoxUI::InitializeManager(const FManagerData& ManagerData)
@@ -23,3 +23,5 @@ void UManagersInScrollBoxUI::SelectManager()
 {
 	OnManagerSelected.Broadcast(ManagerName, SpeedBoost, IncomeMultiplier, MoneyPriceReduction, ManagerImageInPanel);
 }
+
+

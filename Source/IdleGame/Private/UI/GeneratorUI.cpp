@@ -11,6 +11,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "UI/ManagerPanelUI.h"
+#include "UI/ManagersInScrollBoxUI.h"
 #include "UI/UpgradeUI.h"
 
 void UGeneratorUI::Buy()
@@ -134,7 +136,7 @@ void UGeneratorUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	{
 		if (!UpgradeUIWidget)
 		{
-			UpgradeUIWidget = PlayerController->UpgradeUI;
+			UpgradeUIWidget = PlayerController->GetUpgradeUI();
 		}
 	}
 
@@ -219,7 +221,7 @@ void UGeneratorUI::ToggleUpgradeWidget(UWidgetAnimation* Animation)
 	if (UpgradeUIWidget)
 	{
 		UpgradeUIWidget->CurrentGenerator = this;
-		if (PlayerController->UpgradeUI->IsVisible())
+		if (UpgradeUIWidget->IsVisible())
 		{
 			if (GeneratorData.GeneratorName == MainGameInstance->CurrentSelectedGenerator)
 			{
@@ -240,9 +242,22 @@ void UGeneratorUI::ToggleUpgradeWidget(UWidgetAnimation* Animation)
 		}
 		MainGameInstance->CurrentSelectedGenerator = GeneratorData.GeneratorName;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("UpgradeUIWidget is null in UGeneratorUI::ToggleUpgradeWidget"));
-	}
 	
+}
+
+void UGeneratorUI::SelectGenerator()
+{
+	if (PlayerController)
+	{
+		UManagerPanelUI* ManagerPanel = PlayerController->GetManagerPanelUI();
+		if (ManagerPanel)
+		{
+			ManagerPanel->UpdateGeneratorManager(this); // Updates the manager info
+			ManagerPanel->UpdateManagerInfo(GeneratorData.ManagerData.Name,
+				GeneratorData.ManagerData.SpeedBoost,
+				GeneratorData.ManagerData.IncomeMultiplier,
+				GeneratorData.ManagerData.MoneyPriceReduction,
+				GeneratorData.ManagerData.ManagerImage); // Display current manager info
+		}
+	}
 }

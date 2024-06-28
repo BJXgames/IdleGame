@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "MainWorldSubsystem.h"
+#include "Data/ManagerData.h"
 #include "GameFramework/SaveGame.h"
 #include "IdleGameSave.generated.h"
 
@@ -40,6 +41,9 @@ struct FGeneratorSaveData
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<FLargeNumber> AmountOfGeneratorsToBuy;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<FManagerData> ManagerDatas;
 };
 
 UCLASS()

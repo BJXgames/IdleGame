@@ -7,6 +7,7 @@
 #include "Data/ManagerData.h"
 #include "ManagersInScrollBoxUI.generated.h"
 
+class UGeneratorUI;
 class UImage;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnManagerSelected, const FName&, ManagerName, float, SpeedBoost, float, IncomeMultiplier, float, MoneyPriceReduction, UTexture2D*, ManagerImage);
@@ -37,4 +38,5 @@ private:
 
 	UPROPERTY()
 	UTexture2D* ManagerImageInPanel;
+	
 };

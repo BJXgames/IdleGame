@@ -94,4 +94,9 @@ void UUpgradeUI::UpgradeSpeed()
     }
 }
 
+UManagerUI* UUpgradeUI::GetManagerUI() const
+{
+	return BP_ManagerWidget;
+}
+
 
