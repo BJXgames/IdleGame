@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "ManagerPanelUI.generated.h"
 
+class UImage;
 class UTextBlock;
 class UUniformGridPanel;
 class UManagersInScrollBoxUI;
@@ -20,6 +21,18 @@ class IDLEGAME_API UManagerPanelUI : public UUserWidget
 	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
 	UTextBlock* ManagerNameText;
 
+	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
+	UTextBlock* SpeedBoostText;
+
+	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
+	UTextBlock* IncomeMultiplierText;
+
+	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
+	UTextBlock* MoneyPriceReductionText;
+
+	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
+	UImage* ManagerImage;
+
 	UPROPERTY(EditAnywhere, Category = UI)
 	TSubclassOf<UManagersInScrollBoxUI>  ManagerInScrollBoxUIClass;
 
@@ -31,7 +44,7 @@ class IDLEGAME_API UManagerPanelUI : public UUserWidget
 	void AddManagersToUniformGrid();
 
 	UFUNCTION()
-	void UpdateManagerInfo(const FName& ManagerName);
+	void UpdateManagerInfo(const FName& ManagerName, float SpeedBoost, float IncomeMultiplier, float MoneyPriceReduction, UTexture2D* Image);
 	
 protected:
 	virtual void NativeConstruct() override;

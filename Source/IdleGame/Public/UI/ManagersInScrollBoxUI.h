@@ -9,7 +9,8 @@
 
 class UImage;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnManagerSelected, const FName&, ManagerName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnManagerSelected, const FName&, ManagerName, float, SpeedBoost, float, IncomeMultiplier, float, MoneyPriceReduction, UTexture2D*, ManagerImage);
+
 
 UCLASS()
 class IDLEGAME_API UManagersInScrollBoxUI : public UUserWidget
@@ -18,7 +19,7 @@ class IDLEGAME_API UManagersInScrollBoxUI : public UUserWidget
 
 public:
 	UPROPERTY(VisibleAnywhere, Category = UI, meta = (BindWidget))
-	UImage* ManagerImage;
+	UImage* ManagerImageInGrid;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnManagerSelected OnManagerSelected;
@@ -30,4 +31,10 @@ public:
 
 private:
 	FName ManagerName;
+	float SpeedBoost;
+	float IncomeMultiplier;
+	float MoneyPriceReduction;
+
+	UPROPERTY()
+	UTexture2D* ManagerImageInPanel;
 };

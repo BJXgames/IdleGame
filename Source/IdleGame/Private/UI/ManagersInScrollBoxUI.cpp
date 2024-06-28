@@ -8,13 +8,18 @@
 void UManagersInScrollBoxUI::InitializeManager(const FManagerData& ManagerData)
 {
 	ManagerName = ManagerData.Name;
-	if (ManagerImage && ManagerData.ManagerImage)
+	SpeedBoost = ManagerData.SpeedBoost;
+	IncomeMultiplier = ManagerData.IncomeMultiplier;
+	MoneyPriceReduction = ManagerData.MoneyPriceReduction;
+	ManagerImageInPanel = ManagerData.ManagerImage;
+	
+	if (ManagerImageInGrid && ManagerData.ManagerImage)
 	{
-		ManagerImage->SetBrushFromTexture(ManagerData.ManagerImage);
+		ManagerImageInGrid->SetBrushFromTexture(ManagerData.ManagerImage);
 	}
 }
 
 void UManagersInScrollBoxUI::SelectManager()
 {
-	OnManagerSelected.Broadcast(ManagerName);
+	OnManagerSelected.Broadcast(ManagerName, SpeedBoost, IncomeMultiplier, MoneyPriceReduction, ManagerImageInPanel);
 }

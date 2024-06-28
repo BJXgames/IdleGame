@@ -15,6 +15,11 @@ void UManagerPanelUI::NativeConstruct()
 	Super::NativeConstruct();
 
 	AddManagersToUniformGrid();
+	if(ManagerImage)
+	{
+		FSlateColor TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 0.f));
+		ManagerImage->SetBrushTintColor(TintColor);
+	}
 }
 
 void UManagerPanelUI::AddManagersToUniformGrid()
@@ -59,10 +64,34 @@ void UManagerPanelUI::AddManagersToUniformGrid()
 	}
 }
 
-void UManagerPanelUI::UpdateManagerInfo(const FName& ManagerName)
+void UManagerPanelUI::UpdateManagerInfo(const FName& ManagerName, float SpeedBoost, float IncomeMultiplier, float MoneyPriceReduction, UTexture2D* Image)
 {
 	if (ManagerNameText)
 	{
 		ManagerNameText->SetText(FText::FromName(ManagerName));
+	}
+	if (SpeedBoostText)
+	{
+		FText SpeedBoostValue = FText::AsNumber(SpeedBoost);
+		FText SpeedBoostDisplay = FText::Format(FText::FromString("{0}x"), SpeedBoostValue);
+		SpeedBoostText->SetText(SpeedBoostDisplay);
+	}
+	if (IncomeMultiplierText)
+	{
+		FText IncomeMultiplierValue = FText::AsNumber(IncomeMultiplier);
+		FText IncomeMultiplierDisplay = FText::Format(FText::FromString("{0}x"), IncomeMultiplierValue);
+		IncomeMultiplierText->SetText(IncomeMultiplierDisplay);
+	}
+	if (MoneyPriceReductionText)
+	{
+		FText MoneyPriceReductionValue = FText::AsNumber(MoneyPriceReduction);
+		FText MoneyPriceReductionDisplay = FText::Format(FText::FromString("{0}x"), MoneyPriceReductionValue);
+		MoneyPriceReductionText->SetText(MoneyPriceReductionDisplay);
+	}
+	if(ManagerImage)
+	{
+		FSlateColor TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 1.f));
+		ManagerImage->SetBrushTintColor(TintColor);
+		ManagerImage->SetBrushFromTexture(Image);
 	}
 }
