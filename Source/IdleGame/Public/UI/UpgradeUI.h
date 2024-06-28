@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MainWorldSubsystem.h"
 #include "Blueprint/UserWidget.h"
 #include "UpgradeUI.generated.h"
 
+class UButton;
 class UGeneratorUI;
 class UMainGameInstance;
 class UMainWorldSubsystem;
@@ -40,8 +42,11 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
 	UTextBlock* GenSpeedText;
 
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UButton* SpeedUpgradeButton;
+
 public:
-	void UpdateGenText(double Quantity, double MaxTime, double Income, FString GenName);
+	void UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLargeNumber Income, FString GenName);
 
 	UFUNCTION(BlueprintCallable)
 	void UpgradeSpeed();

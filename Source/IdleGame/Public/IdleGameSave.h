@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MainWorldSubsystem.h"
 #include "GameFramework/SaveGame.h"
 #include "IdleGameSave.generated.h"
 
@@ -17,22 +18,28 @@ struct FGeneratorSaveData
 	TArray<FString> GeneratorNames;
 
 	UPROPERTY(VisibleAnywhere)
-	TArray<double> Quantities;
+	TArray<FLargeNumber> Quantities;
 
 	UPROPERTY(VisibleAnywhere)
-	TArray<double> Incomes;
+	TArray<FLargeNumber> Incomes;
 
 	UPROPERTY(VisibleAnywhere)
-	TArray<double> MoneyCosts;
+	TArray<FLargeNumber> MoneyCosts;
 
 	UPROPERTY(VisibleAnywhere)
-	TArray<double> ProductCosts;
+	TArray<FLargeNumber> ProductCosts;
 
 	UPROPERTY(VisibleAnywhere)
-	TArray<double> MaxTimes;
+	TArray<FLargeNumber> MaxTimes;
 
 	UPROPERTY(VisibleAnywhere)
-	TArray<double> SpeedPrices;
+	TArray<FLargeNumber> SpeedPrices;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<FLargeNumber> GeneratorsBought;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<FLargeNumber> AmountOfGeneratorsToBuy;
 };
 
 UCLASS()
@@ -46,7 +53,7 @@ public:
 	FDateTime SaveTime;
 	
 	UPROPERTY(VisibleAnywhere)
-	double Money;
+	FLargeNumber Money;
 
 	UPROPERTY(VisibleAnywhere)
 	FGeneratorSaveData Gens;

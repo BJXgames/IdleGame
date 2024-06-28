@@ -6,27 +6,36 @@
 #include "MainGameInstance.h"
 #include "MainPlayerController.h"
 #include "MainWorldSubsystem.h"
+#include "Components/BackgroundBlur.h"
+#include "Components/Border.h"
 #include "Components/TextBlock.h"
 
 void UAfkUI::CloseWidget()
 {
-	PlayerController->AfkUI->SetVisibility(ESlateVisibility::Hidden);
+	MainBorder->SetVisibility(ESlateVisibility::Hidden);
+	BackgroundBlur->SetVisibility(ESlateVisibility::Hidden);
+	AfkTimeText->SetVisibility(ESlateVisibility::Hidden);
+	MainGameInstance->Money += OfflineEarningAmount;
 }
 
 void UAfkUI::UpdateText()
 {
-	double OflineTime = MainGameInstance->CalculateOfflineTime();
-	int32 Days = OflineTime / 86400;
-	int32 Hours = (OflineTime - (Days * 86400)) / 3600;
-	int32 Minutes = (OflineTime - (Days * 86400) - (Hours * 3600)) / 60;
-	int32 Seconds = OflineTime - (Days * 86400) - (Hours * 3600) - (Minutes * 60);
-	
+	float OfflineTime = MainGameInstance->CalculateOfflineTime();
+	int32 Days = OfflineTime / 86400;
+	int32 Hours = (OfflineTime - (Days * 86400)) / 3600;
+	int32 Minutes = (OfflineTime - (Days * 86400) - (Hours * 3600)) / 60;
+	int32 Seconds = OfflineTime - (Days * 86400) - (Hours * 3600) - (Minutes * 60);
+
 	FString TimeString = FString::Printf(TEXT("Time since last visit: %dh %dm %ds"), Hours, Minutes, Seconds);
 	AfkTimeText->SetText(FText::FromString(TimeString));
-	
-	FString OfflineEarning = FString::Printf(TEXT("%s"), *WorldSubsystem->FormatLargeNumber(MainGameInstance->Money - MainGameInstance->StartMoney));
+
+	// Calculate offline earnings based on income rate and offline duration
+	OfflineEarningAmount = MainGameInstance->Generators[0]->GeneratorData.Income * MainGameInstance->Generators[0]->GeneratorData.Quantity * OfflineTime; // Assuming GeneratorData.Income is per second
+	OfflineEarningAmount.Normalize(); // Normalize the large number
+    
+	// Format and display offline earnings
+	FString OfflineEarning = FString::Printf(TEXT("%s"), *WorldSubsystem->FormatLargeNumber(OfflineEarningAmount));
 	OfflineEarningText->SetText(FText::FromString(OfflineEarning));
-	
 }
 
 void UAfkUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)

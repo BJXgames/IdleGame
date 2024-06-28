@@ -3,42 +3,200 @@
 
 #include "MainWorldSubsystem.h"
 
-
-FString UMainWorldSubsystem::FormatLargeNumber(double Number)
+void FLargeNumber::Normalize()
 {
-	const double Threshold = 1000.0L;
-
-	if (Number < 0)
+	const float Threshold = 1000.0f;
+	
+	while (Value >= Threshold && MagnitudeIndex < NumberSuffixes.Num() - 1)
 	{
-		// Handle negative numbers as needed
-		return FString(TEXT("Invalid")); // Or any other appropriate action for negative numbers
+		Value /= Threshold;
+		++MagnitudeIndex;
 	}
-
-	// Find the appropriate suffix and format the number accordingly
-	int32 MagnitudeIndex = 0;
-	double FormattedNumber = Number;
-
-	while (FormattedNumber >= Threshold && MagnitudeIndex < NumberSuffixes.Num())
+	while (Value < 1.0f && MagnitudeIndex > 0)
 	{
-		FormattedNumber /= Threshold;
-		MagnitudeIndex++;
+		Value *= Threshold;
+		--MagnitudeIndex;
 	}
+}
 
-	// Format the number with the prefix and suffix
-	FString FormattedString;
-	if (MagnitudeIndex == 0)
+FLargeNumber FLargeNumber::operator+(const FLargeNumber& Other) const
+{
+	FLargeNumber Result = *this;
+	Result += Other;
+	return Result;
+}
+
+FLargeNumber FLargeNumber::operator-(const FLargeNumber& Other) const
+{
+	FLargeNumber Result = *this;
+	Result -= Other;
+	return Result;
+}
+
+FLargeNumber& FLargeNumber::operator+=(const FLargeNumber& Other)
+{
+	if (MagnitudeIndex == Other.MagnitudeIndex)
 	{
-		// Use "%.0Lf" for whole numbers
-		FormattedString = FString::Printf(TEXT("%.2Lf"), FormattedNumber);
+		Value += Other.Value;
+	}
+	else if (MagnitudeIndex > Other.MagnitudeIndex)
+	{
+		Value += Other.Value / FMath::Pow(1000.0f, MagnitudeIndex - Other.MagnitudeIndex);
 	}
 	else
 	{
-		// Use "%.1Lf" for numbers with one decimal place
-		FormattedString = FString::Printf(TEXT("%.2Lf %s"), FormattedNumber, *NumberSuffixes[MagnitudeIndex - 1].Suffix);
+		Value = (Value / FMath::Pow(1000.0f, Other.MagnitudeIndex - MagnitudeIndex)) + Other.Value;
+		MagnitudeIndex = Other.MagnitudeIndex;
 	}
+	Normalize();
+	return *this;
+}
 
+FLargeNumber& FLargeNumber::operator-=(const FLargeNumber& Other)
+{
+	if (MagnitudeIndex == Other.MagnitudeIndex)
+	{
+		Value -= Other.Value;
+	}
+	else if (MagnitudeIndex > Other.MagnitudeIndex)
+	{
+		Value -= Other.Value / FMath::Pow(1000.0f, MagnitudeIndex - Other.MagnitudeIndex);
+	}
+	else
+	{
+		Value = (Value / FMath::Pow(1000.0f, Other.MagnitudeIndex - MagnitudeIndex)) - Other.Value;
+		MagnitudeIndex = Other.MagnitudeIndex;
+	}
+	Normalize();
+	return *this;
+}
+
+bool FLargeNumber::operator>=(const FLargeNumber& Other) const
+{
+	if (MagnitudeIndex > Other.MagnitudeIndex)
+	{
+		return true;
+	}
+	if (MagnitudeIndex < Other.MagnitudeIndex)
+	{
+		return false;
+	}
+	return Value >= Other.Value;
+}
+
+bool FLargeNumber::operator<=(const FLargeNumber& Other) const
+{
+	if (MagnitudeIndex < Other.MagnitudeIndex)
+	{
+		return true;
+	}
+	if (MagnitudeIndex > Other.MagnitudeIndex)
+	{
+		return false;
+	}
+	return Value <= Other.Value;
+}
+
+bool FLargeNumber::operator>(const FLargeNumber& Other) const
+{
+	if (MagnitudeIndex > Other.MagnitudeIndex)
+	{
+		return true;
+	}
+	if (MagnitudeIndex < Other.MagnitudeIndex)
+	{
+		return false;
+	}
+	return Value > Other.Value;
+}
+
+bool FLargeNumber::operator<(const FLargeNumber& Other) const
+{
+	if (MagnitudeIndex < Other.MagnitudeIndex)
+	{
+		return true;
+	}
+	if (MagnitudeIndex > Other.MagnitudeIndex)
+	{
+		return false;
+	}
+	return Value < Other.Value;
+}
+
+bool FLargeNumber::operator==(const FLargeNumber& Other) const
+{
+	return MagnitudeIndex == Other.MagnitudeIndex && FMath::IsNearlyEqual(Value, Other.Value);
+}
+
+bool FLargeNumber::operator!=(const FLargeNumber& Other) const
+{
+	return !(*this == Other);
+}
+
+FLargeNumber FLargeNumber::operator*(float Multiplier) const
+{
+	FLargeNumber Result = *this;
+	Result.Value *= Multiplier;
+	Result.Normalize();
+	return Result;
+}
+
+FLargeNumber& FLargeNumber::operator*=(float Multiplier)
+{
+	Value *= Multiplier;
+	Normalize();
+	return *this;
+}
+
+FLargeNumber FLargeNumber::operator*(const FLargeNumber& Other) const
+{
+	// Multiply values and adjust magnitude index
+	FLargeNumber Result;
+	Result.Value = Value * Other.Value;
+	Result.MagnitudeIndex = MagnitudeIndex + Other.MagnitudeIndex;
+	Result.Normalize();
+	return Result;
+}
+
+FLargeNumber& FLargeNumber::operator*=(const FLargeNumber& Other)
+{
+	Value *= Other.Value;
+	MagnitudeIndex += Other.MagnitudeIndex;
+	Normalize();
+	return *this;
+}
+
+FLargeNumber& FLargeNumber::operator++()    
+{
+	*this += FLargeNumber(1.0f, 0);
+	return *this;
+}
+
+FLargeNumber FLargeNumber::operator++(int)
+{
+	FLargeNumber Temp = *this;
+	++(*this);
+	return Temp;
+}
+
+
+FString UMainWorldSubsystem::FormatLargeNumber(const FLargeNumber& Number) const
+{
+	FLargeNumber NormalizedNumber = Number;
+	NormalizedNumber.Normalize();
+	
+	FString FormattedString;
+	if (Number.MagnitudeIndex == 0)
+	{
+		FormattedString = FString::Printf(TEXT("%.2f"), NormalizedNumber.Value);
+	}
+	else
+	{
+		FormattedString = FString::Printf(TEXT("%.2f %s"), NormalizedNumber.Value, *NumberSuffixes[NormalizedNumber.MagnitudeIndex]);
+	}
 	return FormattedString;
 }
+
 
 
 

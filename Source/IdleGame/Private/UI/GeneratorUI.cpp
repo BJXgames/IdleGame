@@ -18,51 +18,71 @@ void UGeneratorUI::Buy()
 	UpgradeUIWidget->CurrentGenerator = this;
 	MainGameInstance->bIsBought = true;
 
-	int i = 0;
+	FLargeNumber i = FLargeNumber(0.0, 0);
 	while (i < BuyMultiplier)
 	{
-		if (Product && GeneratorData.MoneyCost <= MainGameInstance->Money && GeneratorData.ProductCost <= Product->
-			GeneratorData.Quantity)
+		if (Product && GeneratorData.MoneyCost <= MainGameInstance->Money && GeneratorData.ProductCost <= Product->GeneratorData.Quantity)
 		{
 			MainGameInstance->Money -= GeneratorData.MoneyCost;
 			Product->GeneratorData.Quantity -= GeneratorData.ProductCost;
-			GeneratorData.Quantity += 1;
-			GeneratorData.MoneyCost *= GeneratorCostMultiplier;
+			GeneratorData.Quantity += FLargeNumber(1.0, 0);
+			GeneratorData.MoneyCost *= GeneratorCostMultiplier.Value;
+			GeneratorData.MoneyCost.Normalize();
 
-			if (GeneratorData.Quantity == 1)
+			++GeneratorData.GeneratorBought;
+
+			if (GeneratorData.Quantity.Value == 1)
 			{
 				Time = 0;
 			}
 
+			CheckIfBuyAmountHasBeenReached();
+			UpdateBuyButtonState();
+			GenerateIncome();
+		}
+		else if (!Product && GeneratorData.MoneyCost <= MainGameInstance->Money)
+		{
+			MainGameInstance->Money -= GeneratorData.MoneyCost;
+			GeneratorData.Quantity += FLargeNumber(1.0, 0);
+			GeneratorData.MoneyCost *= GeneratorCostMultiplier.Value;
+			GeneratorData.MoneyCost.Normalize();
+
+			++GeneratorData.GeneratorBought;
+
+			if (GeneratorData.Quantity.Value == 1)
+			{
+				Time = 0;
+			}
+
+			CheckIfBuyAmountHasBeenReached();
 			UpdateBuyButtonState();
 			GenerateIncome();
 		}
 		else
 		{
-			MainGameInstance->Money -= GeneratorData.MoneyCost;
-			GeneratorData.Quantity += 1;
-			GeneratorData.MoneyCost *= GeneratorCostMultiplier;
+			break;
 		}
-		i++;
+		++i;
 	}
 
-	UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime, GeneratorData.Income,
-	                               GeneratorData.GeneratorName);
+	CheckIfBuyAmountHasBeenReached();
+	UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime.Value, GeneratorData.Income, GeneratorData.GeneratorName);
 }
+
 
 void UGeneratorUI::UpdateBuyButtonState()
 {
-	if (BuyMultiplier != 1)
+	if (BuyMultiplier != FLargeNumber(1.0, 0))
 	{
 		if (Product)
 		{
 			// Disable buy button if not enough product or money
-			BuyButton->SetIsEnabled(ProductCost <= Product->GeneratorData.Quantity && MoneyCost <= MainGameInstance->Money);
+			BuyButton->SetIsEnabled(Product->GeneratorData.Quantity >= GeneratorData.ProductCost && MainGameInstance->Money >= MoneyCost);
 		}
 		else
 		{
 			// Disable buy button if not enough money
-			BuyButton->SetIsEnabled(MoneyCost <= MainGameInstance->Money);
+			BuyButton->SetIsEnabled(MainGameInstance->Money >= MoneyCost);
 		}
 	}
 	else
@@ -70,21 +90,21 @@ void UGeneratorUI::UpdateBuyButtonState()
 		if (Product)
 		{
 			// Disable buy button if not enough product or money
-			BuyButton->SetIsEnabled(
-				ProductCost <= Product->GeneratorData.Quantity && GeneratorData.MoneyCost <= MainGameInstance->Money);
+			BuyButton->SetIsEnabled(Product->GeneratorData.Quantity >= GeneratorData.ProductCost && MainGameInstance->Money >= GeneratorData.MoneyCost);
 		}
 		else
 		{
 			// Disable buy button if not enough money
-			BuyButton->SetIsEnabled(GeneratorData.MoneyCost * BuyMultiplier <= MainGameInstance->Money);
+			BuyButton->SetIsEnabled(MainGameInstance->Money >= GeneratorData.MoneyCost * BuyMultiplier);
 		}
 	}
 }
 
 
+
 void UGeneratorUI::GenerateIncome()
 {
-	if (GeneratorData.Quantity > 0 && Time >= GeneratorData.MaxTime)
+	if (GeneratorData.Quantity.Value > 0 && Time >= GeneratorData.MaxTime.Value)
 	{
 		if (Product)
 		{
@@ -94,7 +114,7 @@ void UGeneratorUI::GenerateIncome()
 		{
 			MainGameInstance->Money += GeneratorData.Income * GeneratorData.Quantity;
 		}
-		Time -= GeneratorData.MaxTime;
+		Time -= GeneratorData.MaxTime.Value;
 		UpdateProgressBar();
 	}
 }
@@ -126,11 +146,12 @@ void UGeneratorUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 		UE_LOG(LogTemp, Error, TEXT("PlayerController is null in UGeneratorUI::NativeConstruct"));
 	}
 
-	if(GeneratorData.Quantity > 0)
+	if(GeneratorData.Quantity.Value > 0)
 	{
 		FLinearColor Color = FLinearColor::White;
 		GeneratorBackground->SetBrushColor(Color);
-		SetIsEnabled(true);
+		GeneratorBackground->SetIsEnabled(true);
+		GeneratorButton->SetIsEnabled(true);
 	}
 	
 }
@@ -155,7 +176,7 @@ void UGeneratorUI::NativePreConstruct()
 
 void UGeneratorUI::UpdateUIDisplays()
 {
-	if (BuyMultiplier != 1)
+	if (BuyMultiplier != FLargeNumber(1.0, 0))
 	{
 		QuantityDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Quantity)));
 		IncomeDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Income)));
@@ -175,7 +196,7 @@ void UGeneratorUI::UpdateUIDisplays()
 
 void UGeneratorUI::CheckIncomeGeneration()
 {
-	if (GeneratorData.Quantity > 0 && Time >= GeneratorData.MaxTime)
+	if (GeneratorData.Quantity > FLargeNumber(0.0, 0) && Time >= GeneratorData.MaxTime.Value)
 	{
 		GenerateIncome();
 	}
@@ -183,9 +204,21 @@ void UGeneratorUI::CheckIncomeGeneration()
 
 void UGeneratorUI::UpdateProgressBar()
 {
-	if (GeneratorData.MaxTime > 0 && GeneratorData.Quantity > 0)
+	if (GeneratorData.MaxTime > FLargeNumber(0.0, 0) && GeneratorData.Quantity > FLargeNumber(0.0, 0))
 	{
-		ProgressBar->SetPercent(Time / GeneratorData.MaxTime);
+		ProgressBar->SetPercent(Time / GeneratorData.MaxTime.Value);
+	}
+}
+
+void UGeneratorUI::CheckIfBuyAmountHasBeenReached()
+{
+	AmountBoughtOfTheGeneratorDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.GeneratorBought)));
+	AmountToReachIfBuyingGeneratorDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.AmountOfGeneratorToBuy)));
+	
+	if(GeneratorData.GeneratorBought >= GeneratorData.AmountOfGeneratorToBuy)
+	{
+		GeneratorData.AmountOfGeneratorToBuy *= 10;
+		GeneratorData.Income *= 2;
 	}
 }
 
@@ -203,15 +236,13 @@ void UGeneratorUI::ToggleUpgradeWidget(UWidgetAnimation* Animation)
 			}
 			else
 			{
-				UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime, GeneratorData.Income,
-											   GeneratorData.GeneratorName);
+				UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime.Value, GeneratorData.Income, GeneratorData.GeneratorName);
 			}
 		}
 		else
 		{
 			bIsHiding = false;
-			UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime, GeneratorData.Income,
-										   GeneratorData.GeneratorName);
+			UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime.Value, GeneratorData.Income, GeneratorData.GeneratorName);
 			UpgradeUIWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 			UpgradeUIWidget->PlayAnimation(Animation);
 		}

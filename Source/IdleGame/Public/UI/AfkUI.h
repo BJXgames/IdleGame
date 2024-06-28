@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MainWorldSubsystem.h"
 #include "Blueprint/UserWidget.h"
 #include "AfkUI.generated.h"
 
+class UBackgroundBlur;
+class UBorder;
 class UMainGameInstance;
 class UMainWorldSubsystem;
 class AMainPlayerController;
@@ -37,7 +40,15 @@ private:
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
 	UTextBlock* OfflineEarningText;
 
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UBorder* MainBorder;
+
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UBackgroundBlur* BackgroundBlur;
+
 	UPROPERTY()
 	AMainPlayerController* PlayerController;
+
+	FLargeNumber OfflineEarningAmount = FLargeNumber(0.0, 0);
 	
 };

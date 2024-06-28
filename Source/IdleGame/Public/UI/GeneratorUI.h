@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MainWorldSubsystem.h"
 #include "UpgradeUI.h"
 #include "Blueprint/UserWidget.h"
 #include "GeneratorUI.generated.h"
@@ -21,22 +22,28 @@ struct FGeneratorData
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere)
-	double Quantity;
+	FLargeNumber Quantity;
 	
 	UPROPERTY(VisibleAnywhere)
-	double Income;
+	FLargeNumber Income;
 	
 	UPROPERTY(VisibleAnywhere)
-	double MoneyCost;
+	FLargeNumber MoneyCost;
 	
 	UPROPERTY(VisibleAnywhere)
-	double ProductCost;
+	FLargeNumber ProductCost;
 	
 	UPROPERTY(VisibleAnywhere)
-	double MaxTime;
+	FLargeNumber MaxTime;
 
 	UPROPERTY(VisibleAnywhere)
-	double SpeedPrice;
+	FLargeNumber SpeedPrice;
+
+	UPROPERTY(VisibleAnywhere)
+	FLargeNumber GeneratorBought;
+
+	UPROPERTY(VisibleAnywhere)
+	FLargeNumber AmountOfGeneratorToBuy;
 	
 	UPROPERTY(VisibleAnywhere)
 	FString GeneratorName;
@@ -77,7 +84,19 @@ public:
 	UTextBlock* ProductCostDisplay;
 
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UTextBlock* AmountAddedToQuantityDisplay;
+
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UTextBlock* AmountBoughtOfTheGeneratorDisplay;
+
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UTextBlock* AmountToReachIfBuyingGeneratorDisplay;
+
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
 	UButton* BuyButton;
+
+	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
+	UButton* GeneratorButton;
 
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
 	UBorder* GeneratorBackground;
@@ -96,16 +115,20 @@ public:
 	void Buy();
 
 	UPROPERTY(EditAnywhere, Category = "Multiplier")
-	double BuyMultiplier = 1;
+	FLargeNumber BuyMultiplier = FLargeNumber(1.0, 0);
 
 	UPROPERTY()
-	double GeneratorCostMultiplier = 1.21;
+	FLargeNumber GeneratorCostMultiplier = 1.21;
 
-	double MoneyCost;
-	double ProductCost;
+	FLargeNumber MoneyCost;
+	FLargeNumber ProductCost;
 
 	UFUNCTION(BlueprintCallable)
 	void ToggleUpgradeWidget(UWidgetAnimation* Animation);
+
+	void UpdateBuyButtonState();
+
+	void CheckIfBuyAmountHasBeenReached();
 
 protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
@@ -115,7 +138,6 @@ protected:
 	void UpdateUIDisplays();
 	void CheckIncomeGeneration();
 	void UpdateProgressBar();
-	void UpdateBuyButtonState();
 
 	UPROPERTY(BlueprintReadOnly)
 	UUpgradeUI* UpgradeUIWidget;
@@ -123,6 +145,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsHiding;
 
+	
 	
 
 	

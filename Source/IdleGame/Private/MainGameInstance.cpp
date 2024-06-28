@@ -6,21 +6,19 @@
 #include "UI/GeneratorUI.h"
 #include "MainWorldSubsystem.h"
 #include "Components/Border.h"
+#include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
 
 
-double UMainGameInstance::CalculateOfflineTime()
+float UMainGameInstance::CalculateOfflineTime()
 {
     // Calculate offline time
     FString SaveFilePath = FPaths::ProjectSavedDir() + TEXT("SaveGames/Slot1.sav");
     DataToLoad->SaveTime = IFileManager::Get().GetTimeStamp(*SaveFilePath);
     
     FDateTime CurrentTime = FDateTime::UtcNow();
-    double TimeElapsed = (CurrentTime - DataToLoad->SaveTime).GetTotalSeconds();
-    double MaxOfflineTime = 43200; // Maximum offline time in seconds (12 hours)
-
-    // UE_LOG(LogTemp, Warning, TEXT("TimeElapsed: %d"), DataToLoad->SaveTime)
-    //UE_LOG(LogTemp, Warning, TEXT("TimeElapsed: %.0LF"), TimeElapsed)
+    float TimeElapsed = (CurrentTime - DataToLoad->SaveTime).GetTotalSeconds();
+    float MaxOfflineTime = 43200; // Maximum offline time in seconds (12 hours)
 
     // Ensure the calculated offline time doesn't exceed the maximum allowed time
     TimeElapsed = FMath::Min(TimeElapsed, MaxOfflineTime);
@@ -35,7 +33,7 @@ double UMainGameInstance::CalculateOfflineTime()
 
 UMainGameInstance::UMainGameInstance()
 {
-    
+    Money = FLargeNumber(1.0, 0);
 }
 
 void UMainGameInstance::InitGenerators()
@@ -46,25 +44,34 @@ void UMainGameInstance::InitGenerators()
     for (int32 i = 0; i < NumberOfGenerators; i++)
     {
         UGeneratorUI* NewGenerator = CreateWidget<UGeneratorUI>(GetWorld(), GeneratorUIClass);
-        NewGenerator->GeneratorData.Income = 1;
-        NewGenerator->GeneratorData.Quantity = (i == 0) ? 1 : 0;
-        NewGenerator->GeneratorData.MoneyCost = (i == 0) ? 10 : (i * i * i * i * i * 1000);
-        NewGenerator->GeneratorData.ProductCost = (i == 0) ? 0 : i * (3 + i);
-        NewGenerator->GeneratorData.MaxTime = (i == 0) ? 0.2 : i * 2;
+        NewGenerator->GeneratorData.Income = FLargeNumber(1.0, 0);
+        NewGenerator->GeneratorData.Quantity = FLargeNumber((i == 0) ? 1.0 : 0.0, 0);
+        NewGenerator->GeneratorData.MoneyCost = FLargeNumber((i == 0) ? 10.0 : (i * i * i * i * i * 1000.0), 0);
+        NewGenerator->GeneratorData.ProductCost = FLargeNumber((i == 0) ? 0.0 : i * (3 + i), 0);
+        NewGenerator->GeneratorData.MaxTime = FLargeNumber((i == 0) ? 1 : i * 2.0, 0);
         NewGenerator->GeneratorData.GeneratorName = FString::Printf(TEXT("Gen %d"), i + 1);
-        NewGenerator->GeneratorData.SpeedPrice = 1;
+        NewGenerator->GeneratorData.SpeedPrice = FLargeNumber(1.0, 0);
+        NewGenerator->GeneratorData.AmountOfGeneratorToBuy = FLargeNumber(100.0, 0);
 
         if(i > 0)
         {
             NewGenerator->Product = Generators[i - 1];
+            NewGenerator->GeneratorData.GeneratorBought = FLargeNumber(0.0, 0);
+        }
+        else
+        {
+            NewGenerator->GeneratorData.GeneratorBought = FLargeNumber(1.0, 0);
         }
 
-        if(NewGenerator->GeneratorData.Quantity <=0)
+        if(NewGenerator->GeneratorData.Quantity.Value <= 0)
         {
-            FLinearColor Color = FLinearColor::Black;
-            //NewGenerator->GeneratorBackground->SetBrushColor(Color);
-            NewGenerator->SetIsEnabled(false);
+            FLinearColor CustomColor(.1, .1, .1, 1.0);
+            NewGenerator->GeneratorBackground->SetBrushColor(CustomColor);
+            NewGenerator->GeneratorBackground->SetIsEnabled(false);
+            NewGenerator->GeneratorButton->SetIsEnabled(false);
         }
+
+        NewGenerator->CheckIfBuyAmountHasBeenReached();
 
         //UE_LOG(LogTemp, Warning, TEXT("Loaded Generator %d: Name=%s, Quantity=%.0f"), i, *NewGenerator->GeneratorData.GeneratorName, NewGenerator->GeneratorData.Quantity);
         
@@ -86,32 +93,42 @@ void UMainGameInstance::CreateSaveFile()
 
 void UMainGameInstance::SaveGame()
 {
-    
     DataToSave = Cast<UIdleGameSave>(UGameplayStatics::CreateSaveGameObject(UIdleGameSave::StaticClass()));
 
     if (DataToSave != nullptr)
     {
         DataToSave->Money = Money;
+
+        // Clear arrays to avoid appending duplicate data if this function is called multiple times
+        DataToSave->Gens.GeneratorNames.Empty();
+        DataToSave->Gens.Quantities.Empty();
+        DataToSave->Gens.Incomes.Empty();
+        DataToSave->Gens.MoneyCosts.Empty();
+        DataToSave->Gens.ProductCosts.Empty();
+        DataToSave->Gens.MaxTimes.Empty();
+        DataToSave->Gens.SpeedPrices.Empty();
+        DataToSave->Gens.GeneratorsBought.Empty();
+        DataToSave->Gens.AmountOfGeneratorsToBuy.Empty();
         
         for (int32 i = 0; i < Generators.Num(); i++)
         {
             UGeneratorUI* CurrentGenerator = Generators[i];
             if (IsValid(CurrentGenerator))
             {
-                DataToSave->Gens.GeneratorNames.Add(Generators[i]->GeneratorData.GeneratorName);
-                DataToSave->Gens.Quantities.Add(Generators[i]->GeneratorData.Quantity);
-                DataToSave->Gens.Incomes.Add(Generators[i]->GeneratorData.Income);
-                DataToSave->Gens.MoneyCosts.Add(Generators[i]->GeneratorData.MoneyCost);
-                DataToSave->Gens.ProductCosts.Add(Generators[i]->GeneratorData.ProductCost);
-                DataToSave->Gens.MaxTimes.Add(Generators[i]->GeneratorData.MaxTime);
-                DataToSave->Gens.SpeedPrices.Add(Generators[i]->GeneratorData.SpeedPrice);
+                DataToSave->Gens.GeneratorNames.Add(CurrentGenerator->GeneratorData.GeneratorName);
+                DataToSave->Gens.Quantities.Add(CurrentGenerator->GeneratorData.Quantity);
+                DataToSave->Gens.Incomes.Add(CurrentGenerator->GeneratorData.Income);
+                DataToSave->Gens.MoneyCosts.Add(CurrentGenerator->GeneratorData.MoneyCost);
+                DataToSave->Gens.ProductCosts.Add(CurrentGenerator->GeneratorData.ProductCost);
+                DataToSave->Gens.MaxTimes.Add(CurrentGenerator->GeneratorData.MaxTime);
+                DataToSave->Gens.SpeedPrices.Add(CurrentGenerator->GeneratorData.SpeedPrice);
+                DataToSave->Gens.GeneratorsBought.Add(CurrentGenerator->GeneratorData.GeneratorBought); 
+                DataToSave->Gens.AmountOfGeneratorsToBuy.Add(CurrentGenerator->GeneratorData.AmountOfGeneratorToBuy); 
 
-                // UE_LOG(LogTemp, Warning, TEXT("saved gen quantity: %.0LF"), DataToSave->Gens.Quantities[i])
+                //UE_LOG(LogTemp, Warning, TEXT(": %s, GeneratorsBought: %.0f"), *DataToSave->Gens.GeneratorNames[i], DataToSave->Gens.GeneratorsBought[i].Value);
             }
         }
 
-        //UE_LOG(LogTemp, Warning, TEXT("Generator 5: %s"), *DataToSave->Gen4->GeneratorData.GeneratorName);
-        
         UGameplayStatics::SaveGameToSlot(DataToSave, "Slot1", 0);
     }
     else
@@ -122,6 +139,7 @@ void UMainGameInstance::SaveGame()
 }
 
 
+
 void UMainGameInstance::LoadGame()
 {
     DataToLoad = Cast<UIdleGameSave>(UGameplayStatics::LoadGameFromSlot("Slot1", 0));
@@ -130,10 +148,8 @@ void UMainGameInstance::LoadGame()
     {
         Money = DataToLoad->Money;
         StartMoney = Money;
-        
-        double TotalOfflineTime = CalculateOfflineTime();
 
-        if(DataToLoad->Gens.GeneratorNames.Num() > 0)
+        if (DataToLoad->Gens.GeneratorNames.Num() > 0)
         {
             // Load data for each generator
             for (int32 i = 0; i < NumberOfGenerators; i++)
@@ -149,37 +165,26 @@ void UMainGameInstance::LoadGame()
                     NewGenerator->GeneratorData.ProductCost = DataToLoad->Gens.ProductCosts[i];
                     NewGenerator->GeneratorData.MaxTime = DataToLoad->Gens.MaxTimes[i];
                     NewGenerator->GeneratorData.SpeedPrice = DataToLoad->Gens.SpeedPrices[i];
+                    NewGenerator->GeneratorData.GeneratorBought = DataToLoad->Gens.GeneratorsBought[i];
+                    NewGenerator->GeneratorData.AmountOfGeneratorToBuy = DataToLoad->Gens.AmountOfGeneratorsToBuy[i];
 
-                    if(i > 0)
+                    if (i > 0)
                     {
                         NewGenerator->Product = Generators[i - 1];
                     }
 
-                    if (NewGenerator->GeneratorData.Quantity > 0)
-                    {
-                        // Calculate the income generated during the offline time and add it immediately
-                        double TimesTriggered = TotalOfflineTime / NewGenerator->GeneratorData.MaxTime;
-                        if (NewGenerator->Product)
-                        {
-                            NewGenerator->Product->GeneratorData.Quantity += NewGenerator->GeneratorData.Income * NewGenerator->GeneratorData.Quantity * TimesTriggered;
-                        }
-                        else
-                        {
-                            Money += NewGenerator->GeneratorData.Income * NewGenerator->GeneratorData.Quantity * TimesTriggered;
-                        }
-                    }
+                    NewGenerator->CheckIfBuyAmountHasBeenReached();
 
-                    //UE_LOG(LogTemp, Warning, TEXT("Loaded Generator %d: Name=%s, Quantity=%.0f"), i, *NewGenerator->GeneratorData.GeneratorName, NewGenerator->GeneratorData.Quantity);
-                
                     // Add the new generator to the Generators array
                     Generators.Add(NewGenerator);
                 }
                 
-                if(NewGenerator->GeneratorData.Quantity <=0)
+                if (NewGenerator->GeneratorData.Quantity <= FLargeNumber(0.0, 0))
                 {
-                    FLinearColor Color = FLinearColor::Black;
-                    //NewGenerator->GeneratorBackground->SetBrushColor(Color);
-                    NewGenerator->SetIsEnabled(false);
+                    FLinearColor CustomColor(.1, .1, .1, 1.0);
+                    NewGenerator->GeneratorBackground->SetBrushColor(CustomColor);
+                    NewGenerator->GeneratorBackground->SetIsEnabled(false);
+                    NewGenerator->GeneratorButton->SetIsEnabled(false);
                 }
             }
         }
@@ -187,7 +192,6 @@ void UMainGameInstance::LoadGame()
         {
             InitGenerators();
         }
-        
     }
     else
     {
@@ -209,8 +213,6 @@ void UMainGameInstance::Init()
 void UMainGameInstance::OnStart()
 {
     Super::OnStart();
-
-    
 }
 
 void UMainGameInstance::Shutdown()

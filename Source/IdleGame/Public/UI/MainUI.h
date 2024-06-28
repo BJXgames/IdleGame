@@ -64,7 +64,7 @@ protected:
 	bool bIsbuyx10Active = false;
 	bool bIsbuyMaxActive = false;
 
-	double IncomePerSecond;
+	FLargeNumber IncomePerSecond;
 	
 public:
 	

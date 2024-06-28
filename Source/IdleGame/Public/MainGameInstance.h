@@ -3,12 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MainWorldSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "UI/MainUI.h"
 #include "MainGameInstance.generated.h"
 
 class UIdleGameSave;
-class UMainWorldSubsystem;
+
 UCLASS()
 class IDLEGAME_API UMainGameInstance : public UGameInstance
 {
@@ -33,13 +34,13 @@ public:
 	
 	virtual void Shutdown() override;
 
-	double CalculateOfflineTime();
+	float CalculateOfflineTime();
 	
 	UPROPERTY()
-	double Money = 1;
+	FLargeNumber Money;
 
 	UPROPERTY()
-	double StartMoney;
+	FLargeNumber StartMoney;
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<UGeneratorUI*> Generators;
