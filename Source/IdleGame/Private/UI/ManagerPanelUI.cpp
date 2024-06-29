@@ -110,6 +110,10 @@ void UManagerPanelUI::UpdateManagerInfo(const FName& ManagerName, float SpeedBoo
 			SelectedGenerator->GeneratorData.ManagerData.IncomeMultiplier = IncomeMultiplier;
 			SelectedGenerator->GeneratorData.ManagerData.MoneyPriceReduction = MoneyPriceReduction;
 			SelectedGenerator->GeneratorData.ManagerData.ManagerImage = Image;
+
+			float AdjustedMaxTime = SelectedGenerator->GeneratorData.ManagerData.ManagerImage ? SelectedGenerator->GeneratorData.MaxTime.Value / SelectedGenerator->GeneratorData.ManagerData.SpeedBoost : SelectedGenerator->GeneratorData.MaxTime.Value;
+			FLargeNumber AdjustedIncome = SelectedGenerator->GeneratorData.ManagerData.ManagerImage ? SelectedGenerator->GeneratorData.Income * SelectedGenerator->GeneratorData.ManagerData.IncomeMultiplier : SelectedGenerator->GeneratorData.Income;
+			PlayerController->GetUpgradeUI()->UpdateGenText(SelectedGenerator->GeneratorData.Quantity, AdjustedMaxTime, AdjustedIncome, SelectedGenerator->GeneratorData.GeneratorName);
 		}
 		if (ManagerNameText)
 		{

@@ -51,6 +51,9 @@ struct FGeneratorData
 
 	UPROPERTY(VisibleAnywhere)
 	FManagerData ManagerData;
+
+	UPROPERTY(VisibleAnywhere)
+	int32 SpeedUpgradeCount;
 };
 
 UCLASS()

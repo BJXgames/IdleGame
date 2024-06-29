@@ -276,7 +276,15 @@ void UMainUI::AddGeneratorToTheScrollBox()
 void UMainUI::UpdateIncomePerSecond()
 {
 	IncomePerSecond = FLargeNumber(0.0, 0);
-	IncomePerSecond += MainGameInstance->Generators[0]->GeneratorData.Income * (1 / MainGameInstance->Generators[0]->GeneratorData.MaxTime.Value) * MainGameInstance->Generators[0]->GeneratorData.Quantity;
+	float AdjustedMaxTime = MainGameInstance->Generators[0]->GeneratorData.MaxTime.Value;
+	FLargeNumber AdjustedIncome = MainGameInstance->Generators[0]->GeneratorData.Income;
+	if (MainGameInstance->Generators[0]->GeneratorData.ManagerData.ManagerImage)
+	{
+		AdjustedMaxTime /= MainGameInstance->Generators[0]->GeneratorData.ManagerData.SpeedBoost;
+		AdjustedIncome *= MainGameInstance->Generators[0]->GeneratorData.ManagerData.IncomeMultiplier;
+	}
+	FLargeNumber GeneratorIncomePerSecond = AdjustedIncome * (1 / AdjustedMaxTime) * MainGameInstance->Generators[0]->GeneratorData.Quantity;
+	IncomePerSecond += GeneratorIncomePerSecond;
     
 	// Debug log to check the values before formatting
 	//UE_LOG(LogTemp, Warning, TEXT("IncomePerSecond: Value = %f, MagnitudeIndex = %d"), IncomePerSecond.Value, IncomePerSecond.MagnitudeIndex);

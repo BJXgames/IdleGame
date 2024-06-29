@@ -54,10 +54,10 @@ void UMainGameInstance::InitGenerators()
         NewGenerator->GeneratorData.Income = FLargeNumber(1.0, 0);
         NewGenerator->GeneratorData.Quantity = FLargeNumber((i == 0) ? 1.0 : 0.0, 0);
         NewGenerator->GeneratorData.MoneyCost = FLargeNumber((i == 0) ? 10.0 : (i * i * i * i * i * 1000.0), 0);
-        NewGenerator->GeneratorData.ProductCost = FLargeNumber((i == 0) ? 0.0 : i * (3 + i), 0);
+        NewGenerator->GeneratorData.ProductCost = FLargeNumber((i == 0) ? 0.0 : i, 0);
         NewGenerator->GeneratorData.MaxTime = FLargeNumber((i == 0) ? 1 : i * 2.0, 0);
         NewGenerator->GeneratorData.GeneratorName = FString::Printf(TEXT("Gen %d"), i + 1);
-        NewGenerator->GeneratorData.SpeedPrice = FLargeNumber(1.0, 0);
+        NewGenerator->GeneratorData.SpeedPrice = FLargeNumber(100.0, 0);
         NewGenerator->GeneratorData.AmountOfGeneratorToBuy = FLargeNumber(100.0, 0);
         NewGenerator->GeneratorData.ManagerData = FManagerData();
 

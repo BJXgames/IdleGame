@@ -16,6 +16,8 @@ void UUpgradeUI::NativeConstruct()
 
 void UUpgradeUI::UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLargeNumber Income, FString GenName)
 {
+	const int32 MaxSpeedUpgrades = 5;
+	
 	Income = Income * (1 / MaxTime.Value) * Quantity;
 	Income.Normalize();
 
@@ -30,11 +32,9 @@ void UUpgradeUI::UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLar
 	GenNameText->SetText(FText::FromString(GenName));
 	SpeedUpgradePriceText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(CurrentGenerator->GeneratorData.SpeedPrice)));
 
-	const float MinMaxTime = 0.14f; // Minimum max time threshold
-
-	if (CurrentGenerator->GeneratorData.MaxTime.Value < MinMaxTime)
+	if (CurrentGenerator->GeneratorData.SpeedUpgradeCount >= MaxSpeedUpgrades)
 	{
-		SpeedUpgradePriceText->SetText(FText::FromString("Max"));
+		SpeedUpgradePriceText->SetText(FText::FromString("Max Upgrades Reached"));
 	}
 	else
 	{
@@ -47,50 +47,47 @@ void UUpgradeUI::UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLar
 
 void UUpgradeUI::UpgradeSpeed()
 {
-    const float MinMaxTime = 0.14f; // Minimum max time threshold
     const float MaxTimeReduction = 0.1f; // Amount to reduce max time by
     const float SpeedPriceMultiplier = 50.0f; // Multiplier for speed price
+    const int32 MaxSpeedUpgrades = 5; // Maximum number of speed upgrades
 
-    if (CurrentGenerator->GeneratorData.MaxTime.Value > MinMaxTime)
+    if (CurrentGenerator->GeneratorData.SpeedUpgradeCount < MaxSpeedUpgrades)
     {
-        if (MainGameInstance->Money >= CurrentGenerator->GeneratorData.SpeedPrice)
-        {
-            // Deduct the speed upgrade cost
-            MainGameInstance->Money -= CurrentGenerator->GeneratorData.SpeedPrice;
+    	if (MainGameInstance->Money >= CurrentGenerator->GeneratorData.SpeedPrice)
+    	{
+    		// Deduct the speed upgrade cost
+    		MainGameInstance->Money -= CurrentGenerator->GeneratorData.SpeedPrice;
 
-            // Increase the speed upgrade price for the next upgrade
-            CurrentGenerator->GeneratorData.SpeedPrice.Value *= SpeedPriceMultiplier;
-            SpeedUpgradePriceText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(CurrentGenerator->GeneratorData.SpeedPrice)));
+    		// Increase the speed upgrade price for the next upgrade
+    		CurrentGenerator->GeneratorData.SpeedPrice.Value *= SpeedPriceMultiplier;
+    		SpeedUpgradePriceText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(CurrentGenerator->GeneratorData.SpeedPrice)));
 
-            // Reduce the max time for the generator
-            CurrentGenerator->GeneratorData.MaxTime.Value -= MaxTimeReduction;
+    		// Reduce the max time for the generator
+    		CurrentGenerator->GeneratorData.MaxTime.Value -= MaxTimeReduction * CurrentGenerator->GeneratorData.MaxTime.Value;
 
-            // Update the generator text
-            UpdateGenText(CurrentGenerator->GeneratorData.Quantity.Value, CurrentGenerator->GeneratorData.MaxTime.Value, CurrentGenerator->GeneratorData.Income.Value, CurrentGenerator->GeneratorData.GeneratorName);
+    		// Increment the speed upgrade count
+    		CurrentGenerator->GeneratorData.SpeedUpgradeCount++;
 
-            // Check if the max time is below the minimum threshold
-            if (CurrentGenerator->GeneratorData.MaxTime.Value < MinMaxTime)
+    		float AdjustedMaxTime = CurrentGenerator->GeneratorData.ManagerData.ManagerImage ? CurrentGenerator->GeneratorData.MaxTime.Value / CurrentGenerator->GeneratorData.ManagerData.SpeedBoost : CurrentGenerator->GeneratorData.MaxTime.Value;
+    		FLargeNumber AdjustedIncome = CurrentGenerator->GeneratorData.ManagerData.ManagerImage ? CurrentGenerator->GeneratorData.Income * CurrentGenerator->GeneratorData.ManagerData.IncomeMultiplier : CurrentGenerator->GeneratorData.Income;
+    		if(CurrentGenerator->GeneratorData.ManagerData.ManagerImage)
+    		{
+    			// Update the generator text if manager is equipped
+    			UpdateGenText(CurrentGenerator->GeneratorData.Quantity, AdjustedMaxTime, AdjustedIncome, CurrentGenerator->GeneratorData.GeneratorName);
+    		}
+            else
             {
-                SpeedUpgradePriceText->SetText(FText::FromString("Max"));
-            }
-        }
-        else
-        {
-            // Insufficient money for upgrade, but check if max time is below threshold
-            if (CurrentGenerator->GeneratorData.MaxTime.Value < MinMaxTime)
-            {
-                SpeedUpgradePriceText->SetText(FText::FromString("Max"));
+            	// Update the generator text if NO manager is equipped
+            	UpdateGenText(CurrentGenerator->GeneratorData.Quantity, AdjustedMaxTime, AdjustedIncome, CurrentGenerator->GeneratorData.GeneratorName);
             }
 
-            // Update the generator text regardless of the condition
-            UpdateGenText(CurrentGenerator->GeneratorData.Quantity.Value, CurrentGenerator->GeneratorData.MaxTime.Value, CurrentGenerator->GeneratorData.Income.Value, CurrentGenerator->GeneratorData.GeneratorName);
-        }
+    		
+    	}
     }
     else
     {
-        // Max time is already below or equal to the minimum threshold
-        UpdateGenText(CurrentGenerator->GeneratorData.Quantity.Value, CurrentGenerator->GeneratorData.MaxTime.Value, CurrentGenerator->GeneratorData.Income.Value, CurrentGenerator->GeneratorData.GeneratorName);
-        SpeedUpgradePriceText->SetText(FText::FromString("Max"));
+        // Reached the maximum number of speed upgrades
+        SpeedUpgradePriceText->SetText(FText::FromString("Max Upgrades Reached"));
     }
 }
 

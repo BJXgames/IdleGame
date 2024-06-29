@@ -13,7 +13,6 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "UI/ManagerPanelUI.h"
-#include "UI/ManagersInScrollBoxUI.h"
 #include "UI/UpgradeUI.h"
 
 void UGeneratorUI::Buy()
@@ -107,18 +106,33 @@ void UGeneratorUI::UpdateBuyButtonState()
 
 void UGeneratorUI::GenerateIncome()
 {
-	if (GeneratorData.Quantity.Value > 0 && Time >= GeneratorData.MaxTime.Value)
+	if (GeneratorData.Quantity.Value > 0)
 	{
-		if (Product)
+		float AdjustedMaxTime = GeneratorData.MaxTime.Value;
+		float AdjustedIncomeMultiplier = 1.0f;
+
+		if (GeneratorData.ManagerData.ManagerImage)
 		{
-			Product->GeneratorData.Quantity += GeneratorData.Income * GeneratorData.Quantity;
+			AdjustedMaxTime /= GeneratorData.ManagerData.SpeedBoost;
+			AdjustedIncomeMultiplier = GeneratorData.ManagerData.IncomeMultiplier;
 		}
-		else
+
+		if (Time >= AdjustedMaxTime || AdjustedMaxTime < 0.1f)
 		{
-			MainGameInstance->Money += GeneratorData.Income * GeneratorData.Quantity;
+			FLargeNumber IncomeToGenerate = GeneratorData.Income * GeneratorData.Quantity * AdjustedIncomeMultiplier;
+
+			if (Product)
+			{
+				Product->GeneratorData.Quantity += IncomeToGenerate;
+			}
+			else
+			{
+				MainGameInstance->Money += IncomeToGenerate;
+			}
+
+			Time = (AdjustedMaxTime < 0.1f) ? 0 : (Time - AdjustedMaxTime); // Reset Time to 0 if below threshold
+			UpdateProgressBar();
 		}
-		Time -= GeneratorData.MaxTime.Value;
-		UpdateProgressBar();
 	}
 }
 
@@ -171,10 +185,12 @@ void UGeneratorUI::NativePreConstruct()
 
 void UGeneratorUI::UpdateUIDisplays()
 {
+	FLargeNumber AdjustedIncome = GeneratorData.ManagerData.ManagerImage ? GeneratorData.Income * GeneratorData.ManagerData.IncomeMultiplier : GeneratorData.Income;
+
 	if (BuyMultiplier != FLargeNumber(1.0, 0))
 	{
 		QuantityDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Quantity)));
-		IncomeDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Income)));
+		IncomeDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(AdjustedIncome)));
 		MoneyCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(MoneyCost)));
 		ProductCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(ProductCost)));
 		NameDisplay->SetText(FText::FromString(GeneratorData.GeneratorName));
@@ -182,7 +198,7 @@ void UGeneratorUI::UpdateUIDisplays()
 	else
 	{
 		QuantityDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Quantity)));
-		IncomeDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.Income)));
+		IncomeDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(AdjustedIncome)));
 		MoneyCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.MoneyCost)));
 		ProductCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.ProductCost)));
 		NameDisplay->SetText(FText::FromString(GeneratorData.GeneratorName));
@@ -191,7 +207,7 @@ void UGeneratorUI::UpdateUIDisplays()
 
 void UGeneratorUI::CheckIncomeGeneration()
 {
-	if (GeneratorData.Quantity > FLargeNumber(0.0, 0) && Time >= GeneratorData.MaxTime.Value)
+	if (GeneratorData.Quantity > FLargeNumber(0.0, 0) && Time >= GeneratorData.MaxTime.Value / GeneratorData.ManagerData.SpeedBoost)
 	{
 		GenerateIncome();
 	}
@@ -199,9 +215,24 @@ void UGeneratorUI::CheckIncomeGeneration()
 
 void UGeneratorUI::UpdateProgressBar()
 {
-	if (GeneratorData.MaxTime > FLargeNumber(0.0, 0) && GeneratorData.Quantity > FLargeNumber(0.0, 0))
+	const float MinMaxTime = 0.1f;
+
+	if (GeneratorData.MaxTime.Value <= MinMaxTime)
 	{
-		ProgressBar->SetPercent(Time / GeneratorData.MaxTime.Value);
+		// If the generator's speed is too high (MaxTime too low), show a full progress bar
+		ProgressBar->SetPercent(1.0f);
+	}
+	else
+	{
+		float adjustedMaxTime = GeneratorData.MaxTime.Value;
+		if (GeneratorData.Quantity > FLargeNumber(0.0, 0))
+		{
+			if (GeneratorData.ManagerData.ManagerImage)
+			{
+				adjustedMaxTime /= GeneratorData.ManagerData.SpeedBoost;
+			}
+			ProgressBar->SetPercent(FMath::Min(Time / adjustedMaxTime, 1.0f));
+		}
 	}
 }
 
@@ -231,6 +262,7 @@ void UGeneratorUI::ToggleUpgradeWidget(UWidgetAnimation* Animation)
                 // If the same generator is clicked again, play the reverse animation to hide
                 bIsHiding = true;
                 UpgradeUIWidget->PlayAnimationReverse(Animation);
+            	
                 // Set visibility to collapsed after the animation finishes
                 FTimerHandle TimerHandle;
                 GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]() {
@@ -241,18 +273,24 @@ void UGeneratorUI::ToggleUpgradeWidget(UWidgetAnimation* Animation)
             else
             {
                 // Update the text with the new generator details
-                UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime.Value, GeneratorData.Income, GeneratorData.GeneratorName);
+                float AdjustedMaxTime = GeneratorData.ManagerData.ManagerImage ? GeneratorData.MaxTime.Value / GeneratorData.ManagerData.SpeedBoost : GeneratorData.MaxTime.Value;
+                FLargeNumber AdjustedIncome = GeneratorData.ManagerData.ManagerImage ? GeneratorData.Income * GeneratorData.ManagerData.IncomeMultiplier : GeneratorData.Income;
+                UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, AdjustedMaxTime, AdjustedIncome, GeneratorData.GeneratorName);
             }
         }
         else
         {
             // If the widget is not visible, set it to visible and play the animation
             bIsHiding = false;
-            UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime.Value, GeneratorData.Income, GeneratorData.GeneratorName);
+        	
+            float AdjustedMaxTime = GeneratorData.ManagerData.ManagerImage ? GeneratorData.MaxTime.Value / GeneratorData.ManagerData.SpeedBoost : GeneratorData.MaxTime.Value;
+            FLargeNumber AdjustedIncome = GeneratorData.ManagerData.ManagerImage ? GeneratorData.Income * GeneratorData.ManagerData.IncomeMultiplier : GeneratorData.Income;
+        	
+            UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, AdjustedMaxTime, AdjustedIncome, GeneratorData.GeneratorName);
             UpgradeUIWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
             UpgradeUIWidget->PlayAnimation(Animation);
         }
-        
+
         // Update the current selected generator in the game instance
         MainGameInstance->CurrentSelectedGenerator = GeneratorData.GeneratorName;
     }
