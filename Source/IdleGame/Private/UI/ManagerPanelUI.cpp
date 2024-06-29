@@ -76,55 +76,81 @@ void UManagerPanelUI::AddManagersToUniformGrid()
 
 void UManagerPanelUI::UpdateManagerInfo(const FName& ManagerName, float SpeedBoost, float IncomeMultiplier, float MoneyPriceReduction, UTexture2D* Image)
 {
+	// Check if Image is nullptr (meaning no manager selected)
 	if(Image == nullptr)
 	{
 		FSlateColor TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 0.f));
 		ManagerImage->SetBrushTintColor(TintColor);
+
+		// Hide other UI elements related to manager details
+		if (ManagerNameText)
+		{
+			ManagerNameText->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (SpeedBoostText)
+		{
+			SpeedBoostText->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (IncomeMultiplierText)
+		{
+			IncomeMultiplierText->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (MoneyPriceReductionText)
+		{
+			MoneyPriceReductionText->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
-	if (SelectedGenerator.IsValid())
+	else // Manager is selected
 	{
-		SelectedGenerator->GeneratorData.ManagerData.Name = ManagerName;
-		SelectedGenerator->GeneratorData.ManagerData.SpeedBoost = SpeedBoost;
-		SelectedGenerator->GeneratorData.ManagerData.IncomeMultiplier = IncomeMultiplier;
-		SelectedGenerator->GeneratorData.ManagerData.MoneyPriceReduction = MoneyPriceReduction;
-		SelectedGenerator->GeneratorData.ManagerData.ManagerImage = Image;
-	}
-	if (ManagerNameText)
-	{
-		ManagerNameText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		ManagerNameText->SetText(FText::FromName(ManagerName));
-	}
-	if (SpeedBoostText)
-	{
-		SpeedBoostText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		FText SpeedBoostValue = FText::AsNumber(SpeedBoost);
-		FText SpeedBoostDisplay = FText::Format(FText::FromString("{0}x"), SpeedBoostValue);
-		SpeedBoostText->SetText(SpeedBoostDisplay);
-	}
-	if (IncomeMultiplierText)
-	{
-		IncomeMultiplierText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		FText IncomeMultiplierValue = FText::AsNumber(IncomeMultiplier);
-		FText IncomeMultiplierDisplay = FText::Format(FText::FromString("{0}x"), IncomeMultiplierValue);
-		IncomeMultiplierText->SetText(IncomeMultiplierDisplay);
-	}
-	if (MoneyPriceReductionText)
-	{
-		MoneyPriceReductionText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		FText MoneyPriceReductionValue = FText::AsNumber(MoneyPriceReduction);
-		FText MoneyPriceReductionDisplay = FText::Format(FText::FromString("{0}x"), MoneyPriceReductionValue);
-		MoneyPriceReductionText->SetText(MoneyPriceReductionDisplay);
-	}
-	if (ManagerImage)
-	{
-		FSlateColor TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 1.f));
-		ManagerImage->SetBrushTintColor(TintColor);
-		ManagerImage->SetBrushFromTexture(Image);
+		// Update manager details UI
+		if (SelectedGenerator.IsValid())
+		{
+			SelectedGenerator->GeneratorData.ManagerData.Name = ManagerName;
+			SelectedGenerator->GeneratorData.ManagerData.SpeedBoost = SpeedBoost;
+			SelectedGenerator->GeneratorData.ManagerData.IncomeMultiplier = IncomeMultiplier;
+			SelectedGenerator->GeneratorData.ManagerData.MoneyPriceReduction = MoneyPriceReduction;
+			SelectedGenerator->GeneratorData.ManagerData.ManagerImage = Image;
+		}
+		if (ManagerNameText)
+		{
+			ManagerNameText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			ManagerNameText->SetText(FText::FromName(ManagerName));
+		}
+		if (SpeedBoostText)
+		{
+			SpeedBoostText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			FText SpeedBoostValue = FText::AsNumber(SpeedBoost);
+			FText SpeedBoostDisplay = FText::Format(FText::FromString("{0}x"), SpeedBoostValue);
+			SpeedBoostText->SetText(SpeedBoostDisplay);
+		}
+		if (IncomeMultiplierText)
+		{
+			IncomeMultiplierText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			FText IncomeMultiplierValue = FText::AsNumber(IncomeMultiplier);
+			FText IncomeMultiplierDisplay = FText::Format(FText::FromString("{0}x"), IncomeMultiplierValue);
+			IncomeMultiplierText->SetText(IncomeMultiplierDisplay);
+		}
+		if (MoneyPriceReductionText)
+		{
+			MoneyPriceReductionText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			FText MoneyPriceReductionValue = FText::AsNumber(MoneyPriceReduction);
+			FText MoneyPriceReductionDisplay = FText::Format(FText::FromString("{0}x"), MoneyPriceReductionValue);
+			MoneyPriceReductionText->SetText(MoneyPriceReductionDisplay);
+		}
+
+		// Update manager image UI
+		if (ManagerImage)
+		{
+			FSlateColor TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 1.f));
+			ManagerImage->SetBrushTintColor(TintColor);
+			ManagerImage->SetBrushFromTexture(Image);
+		}
 	}
 
+	// Update the manager image in the ManagerUI of the UpgradeUI
 	PlayerController->GetUpgradeUI()->GetManagerUI()->UpdateManagerImage(Image);
-	
 }
+
 
 void UManagerPanelUI::UpdateGeneratorManager(UGeneratorUI* Generator)
 {
@@ -135,5 +161,6 @@ void UManagerPanelUI::UpdateGeneratorManager(UGeneratorUI* Generator)
 		Generator->GeneratorData.ManagerData.IncomeMultiplier,
 		Generator->GeneratorData.ManagerData.MoneyPriceReduction,
 		Generator->GeneratorData.ManagerData.ManagerImage);
+	
 }
 

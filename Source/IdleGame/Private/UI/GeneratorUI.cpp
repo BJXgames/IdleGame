@@ -6,6 +6,7 @@
 #include "MainGameInstance.h"
 #include "MainPlayerController.h"
 #include "MainWorldSubsystem.h"
+#include "Animation/WidgetAnimation.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
@@ -218,31 +219,47 @@ void UGeneratorUI::CheckIfBuyAmountHasBeenReached()
 
 void UGeneratorUI::ToggleUpgradeWidget(UWidgetAnimation* Animation)
 {
-	if (UpgradeUIWidget)
-	{
-		UpgradeUIWidget->CurrentGenerator = this;
-		if (UpgradeUIWidget->IsVisible())
-		{
-			if (GeneratorData.GeneratorName == MainGameInstance->CurrentSelectedGenerator)
-			{
-				bIsHiding = true;
-				UpgradeUIWidget->PlayAnimationReverse(Animation);
-			}
-			else
-			{
-				UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime.Value, GeneratorData.Income, GeneratorData.GeneratorName);
-			}
-		}
-		else
-		{
-			bIsHiding = false;
-			UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime.Value, GeneratorData.Income, GeneratorData.GeneratorName);
-			UpgradeUIWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			UpgradeUIWidget->PlayAnimation(Animation);
-		}
-		MainGameInstance->CurrentSelectedGenerator = GeneratorData.GeneratorName;
-	}
-	
+    if (UpgradeUIWidget)
+    {
+        // Set the current generator for the upgrade UI
+        UpgradeUIWidget->CurrentGenerator = this;
+
+        if (UpgradeUIWidget->IsVisible())
+        {
+            if (GeneratorData.GeneratorName == MainGameInstance->CurrentSelectedGenerator)
+            {
+                // If the same generator is clicked again, play the reverse animation to hide
+                bIsHiding = true;
+                UpgradeUIWidget->PlayAnimationReverse(Animation);
+                // Set visibility to collapsed after the animation finishes
+                FTimerHandle TimerHandle;
+                GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]() {
+                    UpgradeUIWidget->SetVisibility(ESlateVisibility::Collapsed);
+                    bIsHiding = false;
+                }, Animation->GetEndTime(), false);
+            }
+            else
+            {
+                // Update the text with the new generator details
+                UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime.Value, GeneratorData.Income, GeneratorData.GeneratorName);
+            }
+        }
+        else
+        {
+            // If the widget is not visible, set it to visible and play the animation
+            bIsHiding = false;
+            UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime.Value, GeneratorData.Income, GeneratorData.GeneratorName);
+            UpgradeUIWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+            UpgradeUIWidget->PlayAnimation(Animation);
+        }
+        
+        // Update the current selected generator in the game instance
+        MainGameInstance->CurrentSelectedGenerator = GeneratorData.GeneratorName;
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("UpgradeUIWidget is null in UGeneratorUI::ToggleUpgradeWidget"));
+    }
 }
 
 void UGeneratorUI::SelectGenerator()
