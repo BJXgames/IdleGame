@@ -62,8 +62,6 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	FGeneratorSaveData Gens;
 	
-
-	
 	
 };
 

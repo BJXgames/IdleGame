@@ -1,8 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "UI/ManagerPanelUI.h"
-
 #include "MainWorldSubsystem.h"
 #include "MainPlayerController.h"
 #include "Components/Image.h"
@@ -13,158 +11,215 @@
 #include "UI/ManagersInScrollBoxUI.h"
 #include "UI/ManagerUI.h"
 #include "MainGameInstance.h"
-
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/WrapBox.h"
+#include "Components/WrapBoxSlot.h"
 
 void UManagerPanelUI::NativeConstruct()
 {
-	Super::NativeConstruct();
+    Super::NativeConstruct();
 
-	MainGameInstance = GetGameInstance<UMainGameInstance>();
-	PlayerController = GetWorld()->GetFirstPlayerController<AMainPlayerController>();
-	WorldSubsystem = GetWorld()->GetSubsystem<UMainWorldSubsystem>();
+    MainGameInstance = GetGameInstance<UMainGameInstance>();
+    PlayerController = GetWorld()->GetFirstPlayerController<AMainPlayerController>();
+    WorldSubsystem = GetWorld()->GetSubsystem<UMainWorldSubsystem>();
 
-	AddManagersToUniformGrid();
+    UpdateManagersToGrid();
 }
 
 void UManagerPanelUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
-	Super::NativeTick(MyGeometry, InDeltaTime);
-	
+    Super::NativeTick(MyGeometry, InDeltaTime);
+
+    static FVector2D LastSize = FVector2D::ZeroVector;
+    FVector2D CurrentSize = WrapBox->GetCachedGeometry().GetLocalSize();
+
+    if (!CurrentSize.Equals(LastSize))
+    {
+        LastSize = CurrentSize;
+        AdjustWidgetPadding(); // Adjust padding when the WrapBox size changes
+    }
 }
 
-void UManagerPanelUI::AddManagersToUniformGrid()
+void UManagerPanelUI::UpdateManagersToGrid()
 {
-	if (!ManagerDataTable)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Manager DataTable not set"));
-		return;
-	}
+    if (!ManagersUnlockedDataTable)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Managers unlocked DataTable not set"));
+        return;
+    }
 
-	int32 CurrentRow = 0;
-	int32 CurrentColumn = 0;
-	const int32 MaxColumns = 5;
+    WrapBox->ClearChildren(); // Clear existing children
 
-	TArray<FName> RowNames = ManagerDataTable->GetRowNames();
-	for (const FName& RowName : RowNames)
-	{
-		FManagerData* ManagerData = ManagerDataTable->FindRow<FManagerData>(RowName, TEXT(""));
-		if (ManagerData)
-		{
-			UManagersInScrollBoxUI* ManagerWidget = CreateWidget<UManagersInScrollBoxUI>(GetWorld(), ManagerInScrollBoxUIClass);
-			if (ManagerWidget)
-			{
-				ManagerWidget->InitializeManager(*ManagerData);
+    const TArray<FName> RowNames = ManagersUnlockedDataTable->GetRowNames();
+    if (RowNames.Num() == 0)
+    {
+        return; // No managers to display
+    }
 
-				// Bind the OnManagerSelected
-				ManagerWidget->OnManagerSelected.AddDynamic(this, &UManagerPanelUI::UpdateManagerInfo);
+    for (int32 i = 0; i < RowNames.Num(); ++i)
+    {
+        FName RowName = RowNames[i];
+        FManagerData* ManagerData = ManagersUnlockedDataTable->FindRow<FManagerData>(RowName, TEXT(""));
+        if (ManagerData)
+        {
+            UManagersInScrollBoxUI* ManagerWidget = CreateWidget<UManagersInScrollBoxUI>(GetWorld(), ManagerInScrollBoxUIClass);
+            if (ManagerWidget)
+            {
+                ManagerWidget->InitializeManager(*ManagerData);
+                ManagerWidget->OnManagerSelected.AddDynamic(this, &UManagerPanelUI::UpdateManagerInfo);
 
-				UniformGridPanel->AddChildToUniformGrid(ManagerWidget, CurrentRow, CurrentColumn);
+                // Add widget to wrap box with default padding
+                WrapBox->AddChildToWrapBox(ManagerWidget);
+            }
+        }
+    }
 
-				ManagerWidget->SetPadding(FMargin(25.0f, 25.0f, 0.0f, 0.0f));
-
-				// Update the column and row
-				++CurrentColumn;
-				if (CurrentColumn >= MaxColumns)
-				{
-					CurrentColumn = 0;
-					++CurrentRow;
-				}
-			}
-		}
-	}
+    AdjustWidgetPadding();
 }
 
-void UManagerPanelUI::UpdateManagerInfo(const FName& ManagerName, float SpeedBoost, float IncomeMultiplier, float MoneyPriceReduction, UTexture2D* Image)
+void UManagerPanelUI::AdjustWidgetPadding()
 {
-	// Check if Image is nullptr (meaning no manager selected)
-	if(Image == nullptr)
-	{
-		FSlateColor TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 0.f));
-		ManagerImage->SetBrushTintColor(TintColor);
+    static FVector2D LastSize = FVector2D::ZeroVector;
+    FVector2D CurrentSize = WrapBox->GetCachedGeometry().GetLocalSize();
+    
+    if (CurrentSize.Equals(LastSize))
+    {
+        return;
+    }
 
-		// Hide other UI elements related to manager details
-		if (ManagerNameText)
-		{
-			ManagerNameText->SetVisibility(ESlateVisibility::Collapsed);
-		}
-		if (SpeedBoostText)
-		{
-			SpeedBoostText->SetVisibility(ESlateVisibility::Collapsed);
-		}
-		if (IncomeMultiplierText)
-		{
-			IncomeMultiplierText->SetVisibility(ESlateVisibility::Collapsed);
-		}
-		if (MoneyPriceReductionText)
-		{
-			MoneyPriceReductionText->SetVisibility(ESlateVisibility::Collapsed);
-		}
-	}
-	else // Manager is selected
-	{
-		// Update manager details UI
-		if (SelectedGenerator.IsValid())
-		{
-			SelectedGenerator->GeneratorData.ManagerData.Name = ManagerName;
-			SelectedGenerator->GeneratorData.ManagerData.SpeedBoost = SpeedBoost;
-			SelectedGenerator->GeneratorData.ManagerData.IncomeMultiplier = IncomeMultiplier;
-			SelectedGenerator->GeneratorData.ManagerData.MoneyPriceReduction = MoneyPriceReduction;
-			SelectedGenerator->GeneratorData.ManagerData.ManagerImage = Image;
+    
+    const float TotalWrapBoxWidth = WrapBox->GetCachedGeometry().GetLocalSize().X;
+    const float WidgetWidth = 200.0f; // Assuming each widget has a fixed width
+    const float DesiredPadding = 20.0f; // Minimum desired padding between widgets
 
-			float AdjustedMaxTime = SelectedGenerator->GeneratorData.ManagerData.ManagerImage ? SelectedGenerator->GeneratorData.MaxTime.Value / SelectedGenerator->GeneratorData.ManagerData.SpeedBoost : SelectedGenerator->GeneratorData.MaxTime.Value;
-			FLargeNumber AdjustedIncome = SelectedGenerator->GeneratorData.ManagerData.ManagerImage ? SelectedGenerator->GeneratorData.Income * SelectedGenerator->GeneratorData.ManagerData.IncomeMultiplier : SelectedGenerator->GeneratorData.Income;
-			PlayerController->GetUpgradeUI()->UpdateGenText(SelectedGenerator->GeneratorData.Quantity, AdjustedMaxTime, AdjustedIncome, SelectedGenerator->GeneratorData.GeneratorName);
-		}
-		if (ManagerNameText)
-		{
-			ManagerNameText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			ManagerNameText->SetText(FText::FromName(ManagerName));
-		}
-		if (SpeedBoostText)
-		{
-			SpeedBoostText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			FText SpeedBoostValue = FText::AsNumber(SpeedBoost);
-			FText SpeedBoostDisplay = FText::Format(FText::FromString("{0}x"), SpeedBoostValue);
-			SpeedBoostText->SetText(SpeedBoostDisplay);
-		}
-		if (IncomeMultiplierText)
-		{
-			IncomeMultiplierText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			FText IncomeMultiplierValue = FText::AsNumber(IncomeMultiplier);
-			FText IncomeMultiplierDisplay = FText::Format(FText::FromString("{0}x"), IncomeMultiplierValue);
-			IncomeMultiplierText->SetText(IncomeMultiplierDisplay);
-		}
-		if (MoneyPriceReductionText)
-		{
-			MoneyPriceReductionText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			FText MoneyPriceReductionValue = FText::AsNumber(MoneyPriceReduction);
-			FText MoneyPriceReductionDisplay = FText::Format(FText::FromString("{0}x"), MoneyPriceReductionValue);
-			MoneyPriceReductionText->SetText(MoneyPriceReductionDisplay);
-		}
+    int32 WidgetsPerRow = FMath::FloorToInt(TotalWrapBoxWidth / (WidgetWidth + DesiredPadding));
+    WidgetsPerRow = FMath::Max(WidgetsPerRow, 1); // Ensure at least one widget per row
 
-		// Update manager image UI
-		if (ManagerImage)
-		{
-			FSlateColor TintColor = FSlateColor(FLinearColor(1.f, 1.f, 1.f, 1.f));
-			ManagerImage->SetBrushTintColor(TintColor);
-			ManagerImage->SetBrushFromTexture(Image);
-		}
-	}
+    float TotalPaddingSpace = TotalWrapBoxWidth - (WidgetsPerRow * WidgetWidth);
+    float PaddingBetweenWidgets = TotalPaddingSpace / (WidgetsPerRow + 1);
 
-	// Update the manager image in the ManagerUI of the UpgradeUI
-	PlayerController->GetUpgradeUI()->GetManagerUI()->UpdateManagerImage(Image);
+    const TArray<UWidget*>& Children = WrapBox->GetAllChildren();
+    for (int32 i = 0; i < Children.Num(); ++i)
+    {
+        UWrapBoxSlot* WrapBoxSlot = Cast<UWrapBoxSlot>(Children[i]->Slot);
+        if (WrapBoxSlot)
+        {
+            float LeftPadding = PaddingBetweenWidgets;
+
+            // Apply the same padding to all widgets
+            WrapBoxSlot->SetPadding(FMargin(LeftPadding, 25.0f, 0.0f, 0.0f));
+            WrapBoxSlot->SetHorizontalAlignment(HAlign_Left);
+        }
+    }
 }
 
+
+void UManagerPanelUI::UpdateManagerInfo(FManagerData ManagerData)
+{
+    if (ManagerData.ManagerImage == nullptr)
+    {
+        HideManagerInfo();
+    }
+    else
+    {
+        DisplayManagerInfo(ManagerData);
+    }
+
+    // Update the manager image in the ManagerUI of the UpgradeUI
+    PlayerController->GetUpgradeUI()->GetManagerUI()->UpdateManagerImage(ManagerData.ManagerImage);
+}
+
+void UManagerPanelUI::HideManagerInfo()
+{
+    const FSlateColor HiddenColor(FLinearColor(1.f, 1.f, 1.f, 0.f));
+    ManagerImage->SetBrushTintColor(HiddenColor);
+
+    SetUIElementVisibility(ESlateVisibility::Collapsed, { ManagerNameText, SpeedBoostText, IncomeMultiplierText, MoneyPriceReductionText });
+}
+
+void UManagerPanelUI::DisplayManagerInfo(const FManagerData& ManagerData)
+{
+    const FLinearColor RarityColor = ManagerData.GetRarityColor();
+
+    UpdateGeneratorData(ManagerData);
+
+    if (ManagerNameText)
+    {
+        ManagerNameText->SetColorAndOpacity(RarityColor);
+        ManagerNameText->SetText(FText::FromName(ManagerData.Name));
+        ManagerNameText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+    }
+
+    UpdateTextBlock(SpeedTextBlock, RarityColor);
+    UpdateTextBlock(IncomeTextBlock, RarityColor);
+    UpdateTextBlock(PriceTextBlock, RarityColor);
+
+    UpdateManagerInfoText(SpeedBoostText, ManagerData.SpeedBoost);
+    UpdateManagerInfoText(IncomeMultiplierText, ManagerData.IncomeMultiplier);
+    UpdateManagerInfoText(MoneyPriceReductionText, ManagerData.MoneyPriceReduction);
+
+    if (ManagerImage)
+    {
+        const FSlateColor VisibleColor(FLinearColor(1.f, 1.f, 1.f, 1.f));
+        ManagerImage->SetBrushTintColor(VisibleColor);
+        ManagerImage->SetBrushFromTexture(ManagerData.ManagerImage);
+    }
+}
+
+void UManagerPanelUI::UpdateGeneratorData(const FManagerData& ManagerData)
+{
+    if (SelectedGenerator.IsValid())
+    {
+        auto& GenData = SelectedGenerator->GeneratorData;
+        GenData.ManagerData = ManagerData;
+
+        const float AdjustedMaxTime = GenData.ManagerData.ManagerImage ? GenData.MaxTime.Value / GenData.ManagerData.SpeedBoost : GenData.MaxTime.Value;
+        const FLargeNumber AdjustedIncome = GenData.ManagerData.ManagerImage ? GenData.Income * GenData.ManagerData.IncomeMultiplier : GenData.Income;
+
+        PlayerController->GetUpgradeUI()->UpdateGenText(GenData.Quantity, AdjustedMaxTime, AdjustedIncome, GenData.GeneratorName);
+    }
+}
+
+void UManagerPanelUI::UpdateTextBlock(UTextBlock* TextBlock, const FLinearColor& Color)
+{
+    if (TextBlock)
+    {
+        TextBlock->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        TextBlock->SetColorAndOpacity(Color);
+    }
+}
+
+void UManagerPanelUI::UpdateManagerInfoText(UTextBlock* TextBlock, float Value)
+{
+    if (TextBlock)
+    {
+        TextBlock->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+        TextBlock->SetText(FText::Format(FText::FromString("{0}x"), FText::AsNumber(Value)));
+    }
+}
+
+void UManagerPanelUI::SetUIElementVisibility(ESlateVisibility VisibilityOfWidget, const TArray<UTextBlock*>& Elements)
+{
+    for (UTextBlock* Element : Elements)
+    {
+        if (Element)
+        {
+            Element->SetVisibility(VisibilityOfWidget);
+        }
+    }
+}
 
 void UManagerPanelUI::UpdateGeneratorManager(UGeneratorUI* Generator)
 {
-	SelectedGenerator = Generator;
-
-	UpdateManagerInfo(Generator->GeneratorData.ManagerData.Name,
-		Generator->GeneratorData.ManagerData.SpeedBoost,
-		Generator->GeneratorData.ManagerData.IncomeMultiplier,
-		Generator->GeneratorData.ManagerData.MoneyPriceReduction,
-		Generator->GeneratorData.ManagerData.ManagerImage);
-	
+    SelectedGenerator = Generator;
+    UpdateManagerInfo(Generator->GeneratorData.ManagerData);
 }
 
+void UManagerPanelUI::ResetManagersPanelText()
+{
+    const FLinearColor DefaultColor = FLinearColor::White;
+    ManagerNameText->SetColorAndOpacity(DefaultColor);
+    SpeedTextBlock->SetColorAndOpacity(DefaultColor);
+    IncomeTextBlock->SetColorAndOpacity(DefaultColor);
+    PriceTextBlock->SetColorAndOpacity(DefaultColor);
+}

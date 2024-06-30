@@ -49,6 +49,8 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, Category = UI, meta = (BindWidget))
 	UManagerUI* BP_ManagerWidget;
 
+	const int32 MaxSpeedUpgrades = 10; // Maximum number of speed upgrades
+
 public:
 	void UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLargeNumber Income, FString GenName);
 

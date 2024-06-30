@@ -2,13 +2,15 @@
 
 
 #include "MainGameInstance.h"
+
+#include "Engine/DataTable.h"
 #include "Data/IdleGameSave.h"
 #include "UI/GeneratorUI.h"
 #include "MainWorldSubsystem.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
-#include "Engine/DataTable.h"
 #include "Kismet/GameplayStatics.h"
+#include "UI/ManagerPanelUI.h"
 
 
 float UMainGameInstance::CalculateOfflineTime()
@@ -41,6 +43,12 @@ UMainGameInstance::UMainGameInstance()
     {
         ManagerDataTable = ManagerDataTableObj.Object;
     }
+
+    static ConstructorHelpers::FObjectFinder<UDataTable> ManagersUnlockedDataTableObj(TEXT("/Game/Data/ManagersUnlockedDataTable"));
+    if (ManagerDataTableObj.Succeeded())
+    {
+        ManagersUnlockedDataTable = ManagersUnlockedDataTableObj.Object;
+    }
 }
 
 void UMainGameInstance::InitGenerators()
@@ -60,7 +68,7 @@ void UMainGameInstance::InitGenerators()
         NewGenerator->GeneratorData.SpeedPrice = FLargeNumber(100.0, 0);
         NewGenerator->GeneratorData.AmountOfGeneratorToBuy = FLargeNumber(100.0, 0);
         NewGenerator->GeneratorData.ManagerData = FManagerData();
-
+        
         if(i > 0)
         {
             NewGenerator->Product = Generators[i - 1];
@@ -138,6 +146,7 @@ void UMainGameInstance::SaveGame()
                 //UE_LOG(LogTemp, Warning, TEXT(": %s, GeneratorsBought: %.0f"), *DataToSave->Gens.GeneratorNames[i], DataToSave->Gens.GeneratorsBought[i].Value);
             }
         }
+        
 
         UGameplayStatics::SaveGameToSlot(DataToSave, "Slot1", 0);
     }
@@ -183,6 +192,7 @@ void UMainGameInstance::LoadGame()
                     {
                         NewGenerator->Product = Generators[i - 1];
                     }
+                    
 
                     NewGenerator->CheckIfBuyAmountHasBeenReached();
 
@@ -210,47 +220,99 @@ void UMainGameInstance::LoadGame()
         UE_LOG(LogTemp, Warning, TEXT("Load"))
     }
 }
-
-TArray<FManagerData> UMainGameInstance::GetAllManagers() const
+const FManagerData* UMainGameInstance::GetRandomManagerFromDataTable()
 {
-    TArray<FManagerData> Managers;
-    if (ManagerDataTable)
+    if (!ManagerDataTable)
     {
-        TArray<FName> RowNames = ManagerDataTable->GetRowNames();
-        for (auto& Name : RowNames)
-        {
-            FManagerData* Row = ManagerDataTable->FindRow<FManagerData>(Name, TEXT(""));
-            if (Row)
-            {
-                Managers.Add(*Row);
-            }
-        }
+        UE_LOG(LogTemp, Warning, TEXT("ManagerDataTable is not set! Cannot get random manager."));
+        return nullptr;
     }
-    return Managers;
+
+    // Get the row map of the data table
+    TArray<FName> RowNames = ManagerDataTable->GetRowNames();
+
+    // Check if there are any rows in the data table
+    if (RowNames.Num() == 0)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("ManagerDataTable is empty! Cannot get random manager."));
+        return nullptr;
+    }
+
+    // Generate a random index within the range of the row map
+    int32 RandomIndex = FMath::RandRange(0, RowNames.Num() - 1);
+
+    // Get a random row name from the data table
+    FName RandomRowName = RowNames[RandomIndex];
+
+    // Use the row name to find the manager data in the data table
+    const FManagerData* RandomManager = ManagerDataTable->FindRow<FManagerData>(RandomRowName, TEXT(""));
+
+    if (!RandomManager)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to find manager data for row %s in ManagerDataTable!"), *RandomRowName.ToString());
+    }
+
+    return RandomManager;
 }
 
-FManagerData* UMainGameInstance::GetManagerByName(FName ManagerName) const
+
+void UMainGameInstance::AddManagerToInventory()
 {
-    if (ManagerDataTable)
+    if (ManagersUnlockedDataTable->GetRowMap().Num() >= 200)
     {
-        return ManagerDataTable->FindRow<FManagerData>(ManagerName, TEXT(""));
+        UE_LOG(LogTemp, Warning, TEXT("Cannot add more managers, data table has reached the maximum limit (200 managers)."));
+        return;
     }
-    return nullptr;
+
+    MainPlayerController->GetManagerPanelUI()->UpdateManagersToGrid();
+    
+    // Get a random manager from the ManagerDataTable
+    const FManagerData* RandomManager = GetRandomManagerFromDataTable();
+
+    if (!RandomManager)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to add manager to inventory because random manager is nullptr."));
+        return;
+    }
+
+    // Create a new row name for the data table entry
+    FName NewRowName = FName(*FString::Printf(TEXT("Manager_%d"), ManagersUnlockedDataTable->GetRowMap().Num() + 1));
+
+    // Add the new manager data to the data table
+    ManagersUnlockedDataTable->AddRow(NewRowName, *RandomManager);
+
+    UE_LOG(LogTemp, Log, TEXT("Added new manager to the data table: %s"), *NewRowName.ToString());
+}
+
+
+void UMainGameInstance::InitializeWithPlayerController(AMainPlayerController* PlayerController)
+{
+    MainPlayerController = PlayerController;
+
+    if (MainPlayerController)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Successfully obtained MainPlayerController"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Failed to get MainPlayerController in UMainGameInstance::Init()"));
+    }
 }
 
 
 void UMainGameInstance::Init()
 {
 	Super::Init();
-
-    WorldSubsystem = GetWorld()->GetSubsystem<UMainWorldSubsystem>();
+    
     LoadGame();
     
 }
 
+
 void UMainGameInstance::OnStart()
 {
     Super::OnStart();
+    
 }
 
 void UMainGameInstance::Shutdown()

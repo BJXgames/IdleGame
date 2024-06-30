@@ -8,6 +8,7 @@
 #include "Components/TextBlock.h"
 #include "Components/UniformGridPanel.h"
 #include "Kismet/GameplayStatics.h"
+#include "UI/ManagerPanelUI.h"
 #include "UI/UpgradeUI.h"
 
 void UMainUI::NativeConstruct()
@@ -39,6 +40,10 @@ void UMainUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 void UMainUI::UpdateBuyMultiplier()
 {
+	if(bIsbuyx1Active)
+	{
+		buyx1();
+	}
 	if (bIsbuyMaxActive)
 	{
 		buyxMax();
@@ -53,6 +58,31 @@ void UMainUI::UpdateBuyMultiplier()
 	}
 }
 
+void UMainUI::UpdateGeneratorCostsAndUI(UGeneratorUI* Generator, FLargeNumber Multiplier)
+{
+	// Apply manager price reduction if applicable
+	FLargeNumber AdjustedMoneyCost = Generator->GeneratorData.ManagerData.ManagerImage ?
+									 Generator->GeneratorData.MoneyCost * Generator->GeneratorData.ManagerData.MoneyPriceReduction : 
+									 Generator->GeneratorData.MoneyCost;
+
+	Generator->MoneyCost = AdjustedMoneyCost;
+	Generator->BuyMultiplier = Multiplier;
+	Generator->ProductCost = Generator->GeneratorData.ProductCost;
+
+	FLargeNumber TempValue = AdjustedMoneyCost;
+	FLargeNumber TempProductCost = Generator->GeneratorData.ProductCost;
+
+	for (FLargeNumber i = FLargeNumber(1, 0); i < Multiplier; ++i)
+	{
+		TempValue *= Generator->GeneratorCostMultiplier;
+		Generator->MoneyCost += TempValue;
+		Generator->ProductCost += TempProductCost;
+	}
+
+	Generator->AmountAddedToQuantityDisplay->SetText(FText::FromString("+" + WorldSubsystem->FormatLargeNumber(Generator->BuyMultiplier)));
+}
+
+
 void UMainUI::buyx1()
 {
 	bIsbuyx1Active = true;
@@ -62,11 +92,7 @@ void UMainUI::buyx1()
 
 	for (UGeneratorUI* Generator : MainGameInstance->Generators)
 	{
-		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
-		Generator->BuyMultiplier = 1;
-		Generator->ProductCost = Generator->GeneratorData.ProductCost;
-
-		Generator->AmountAddedToQuantityDisplay->SetText(FText::FromString("+" + WorldSubsystem->FormatLargeNumber(Generator->BuyMultiplier)));
+		UpdateGeneratorCostsAndUI(Generator, FLargeNumber(1.0, 0));
 	}
 }
 
@@ -84,20 +110,7 @@ void UMainUI::buyx5()
 	bIsbuyx5Active = true;
 	for (UGeneratorUI* Generator : MainGameInstance->Generators)
 	{
-		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
-		Generator->BuyMultiplier = FLargeNumber(5.0, 0);
-		FLargeNumber TempValue = Generator->GeneratorData.MoneyCost;
-		FLargeNumber TempProductCost = Generator->GeneratorData.ProductCost;
-		Generator->ProductCost = TempProductCost;
-
-		for (int i = 0; i < 4; ++i)
-		{
-			TempValue *= Generator->GeneratorCostMultiplier;
-			Generator->MoneyCost += TempValue;
-			Generator->ProductCost += TempProductCost;
-		}
-
-		Generator->AmountAddedToQuantityDisplay->SetText(FText::FromString("+" + WorldSubsystem->FormatLargeNumber(Generator->BuyMultiplier)));
+		UpdateGeneratorCostsAndUI(Generator, FLargeNumber(5.0, 0));
 	}
 	MainGameInstance->bIsBought = false;
 }
@@ -116,90 +129,58 @@ void UMainUI::buyx10()
 	bIsbuyx10Active = true;
 	for (UGeneratorUI* Generator : MainGameInstance->Generators)
 	{
-		Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
-		Generator->BuyMultiplier = FLargeNumber(10.0, 0);
-		FLargeNumber TempValue = Generator->GeneratorData.MoneyCost;
-		FLargeNumber TempProductCost = Generator->GeneratorData.ProductCost;
-		Generator->ProductCost = TempProductCost;
-		
-		for (int i = 0; i < 9; ++i)
-		{
-			TempValue *= Generator->GeneratorCostMultiplier;
-			Generator->MoneyCost += TempValue;
-			Generator->ProductCost += TempProductCost;
-		}
-		
-		Generator->AmountAddedToQuantityDisplay->SetText(FText::FromString("+" + WorldSubsystem->FormatLargeNumber(Generator->BuyMultiplier)));
-		
+		UpdateGeneratorCostsAndUI(Generator, FLargeNumber(10.0, 0));
 	}
 	MainGameInstance->bIsBought = false;
 }
 
 void UMainUI::buyxMax()
 {
-    bIsbuyx1Active = false;
-    bIsbuyx5Active = false;
-    bIsbuyx10Active = false;
+	bIsbuyx1Active = false;
+	bIsbuyx5Active = false;
+	bIsbuyx10Active = false;
+	bIsbuyMaxActive = true;
 
-    bIsbuyMaxActive = true;
+	for (UGeneratorUI* Generator : MainGameInstance->Generators)
+	{
+		FLargeNumber availableMoney = MainGameInstance->Money;
+		FLargeNumber currentMoneyCost = Generator->GeneratorData.MoneyCost;
+		FLargeNumber currentProductCost = Generator->GeneratorData.ProductCost;
+		FLargeNumber buyCount = FLargeNumber(0.0, 0);
 
-    for (UGeneratorUI* Generator : MainGameInstance->Generators)
-    {
-        Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
-        Generator->ProductCost = Generator->GeneratorData.ProductCost;
+		// Adjust the money cost considering the manager's price reduction
+		if (Generator->GeneratorData.ManagerData.ManagerImage)
+		{
+			currentMoneyCost *= Generator->GeneratorData.ManagerData.MoneyPriceReduction;
+		}
 
-        FLargeNumber availableMoney = MainGameInstance->Money;
-        FLargeNumber currentMoneyCost = Generator->GeneratorData.MoneyCost;
-        FLargeNumber currentProductCost = Generator->GeneratorData.ProductCost;
-        FLargeNumber buyCount = FLargeNumber(0.0, 0);
+		if (Generator->Product)
+		{
+			FLargeNumber availableProductQuantity = Generator->Product->GeneratorData.Quantity;
 
-        if (Generator->Product)
-        {
-            FLargeNumber availableProductQuantity = Generator->Product->GeneratorData.Quantity;
-            
-            while (availableMoney >= currentMoneyCost && availableProductQuantity >= currentProductCost)
-            {
-                availableMoney -= currentMoneyCost;
-                availableProductQuantity -= currentProductCost;
-            	++buyCount;
-                currentMoneyCost *= Generator->GeneratorCostMultiplier;
-                currentProductCost += Generator->GeneratorData.ProductCost;
-            }
-        }
-        else
-        {
-            while (availableMoney >= currentMoneyCost)
-            {
-                availableMoney -= currentMoneyCost;
-                ++buyCount;
-                currentMoneyCost *= Generator->GeneratorCostMultiplier;
-            }
-        }
+			while (availableMoney >= currentMoneyCost && availableProductQuantity >= currentProductCost)
+			{
+				availableMoney -= currentMoneyCost;
+				availableProductQuantity -= currentProductCost;
+				++buyCount;
+				currentMoneyCost *= Generator->GeneratorCostMultiplier;
+				currentProductCost += Generator->GeneratorData.ProductCost;
+			}
+		}
+		else
+		{
+			while (availableMoney >= currentMoneyCost)
+			{
+				availableMoney -= currentMoneyCost;
+				++buyCount;
+				currentMoneyCost *= Generator->GeneratorCostMultiplier;
+			}
+		}
+		UpdateGeneratorCostsAndUI(Generator, buyCount);
+	}
 
-        Generator->BuyMultiplier = buyCount;
-
-        if (buyCount > FLargeNumber(0.0, 0))
-        {
-            Generator->MoneyCost = Generator->GeneratorData.MoneyCost;
-            Generator->ProductCost = Generator->GeneratorData.ProductCost;
-            FLargeNumber tempMoneyValue = Generator->GeneratorData.MoneyCost;
-            FLargeNumber tempProductValue = Generator->GeneratorData.ProductCost;
-
-            for (FLargeNumber i = FLargeNumber(1.0, 0); i < buyCount; ++i)
-            {
-                tempMoneyValue *= Generator->GeneratorCostMultiplier;
-                Generator->MoneyCost += tempMoneyValue;
-                Generator->ProductCost += tempProductValue;
-            }
-        }
-
-    	Generator->AmountAddedToQuantityDisplay->SetText(FText::FromString("+" + WorldSubsystem->FormatLargeNumber(Generator->BuyMultiplier)));
-    }
-
-    MainGameInstance->bIsBought = false;
+	MainGameInstance->bIsBought = false;
 }
-
-
 
 void UMainUI::DeleteSave()
 {
@@ -210,7 +191,10 @@ void UMainUI::DeleteSave()
 	UpdateIncomePerSecond();
 	PlayerController->GetUpgradeUI()->SetVisibility(ESlateVisibility::Collapsed);
 	buyx1();
-	
+
+	MainGameInstance->ManagersUnlockedDataTable->EmptyTable();
+	PlayerController->GetManagerPanelUI()->UpdateManagersToGrid();
+	PlayerController->GetManagerPanelUI()->ResetManagersPanelText();
 }
 
 void UMainUI::AddTime()
@@ -220,7 +204,7 @@ void UMainUI::AddTime()
 		if (Generator->GeneratorData.Quantity.Value > 0)
 		{
 			// Calculate the income generated during the offline time and add it immediately
-			FLargeNumber TimesTriggered = FLargeNumber(1000.0f / Generator->GeneratorData.MaxTime.Value, 0);
+			FLargeNumber TimesTriggered = FLargeNumber(100000.0f / Generator->GeneratorData.MaxTime.Value, 0);
 			FLargeNumber IncomeGenerated = Generator->GeneratorData.Income * Generator->GeneratorData.Quantity * TimesTriggered;
 
 			if (Generator->Product)
@@ -233,6 +217,9 @@ void UMainUI::AddTime()
 			}
 		}
 	}
+	
+	MainGameInstance->AddManagerToInventory();
+	//PlayerController->GetManagerPanelUI()->UpdateManagersToGrid();
 }
 
 

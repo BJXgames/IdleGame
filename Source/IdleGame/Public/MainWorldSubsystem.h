@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MainPlayerController.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "MainWorldSubsystem.generated.h"
 
@@ -48,9 +49,11 @@ class IDLEGAME_API UMainWorldSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 
+
 public:
 	UFUNCTION(BlueprintCallable, Category = "LargeNumber")
 	FString FormatLargeNumber(const FLargeNumber& Number) const;
+	
 };
 
 static const TArray<FString> NumberSuffixes = {
@@ -80,5 +83,81 @@ static const TArray<FString> NumberSuffixes = {
 	TEXT("DVg"),
 	TEXT("TVg"),
 	TEXT("QaVg"),
+	TEXT("QiVg"),
+	TEXT("SxVg"),
+	TEXT("SpVg"),
+	TEXT("OcVg"),
+	TEXT("NoVg"),
+	TEXT("Tg"),
+	TEXT("UTg"),
+	TEXT("DTg"),
+	TEXT("TTg"),
+	TEXT("QaTg"),
+	TEXT("QiTg"),
+	TEXT("SxTg"),
+	TEXT("SpTg"),
+	TEXT("OcTg"),
+	TEXT("NoTg"),
+	TEXT("Qd"),
+	TEXT("UQd"),
+	TEXT("DQd"),
+	TEXT("TQd"), 
+	TEXT("QaQd"),
+	TEXT("QiQd"),
+	TEXT("SxQd"),
+	TEXT("SpQd"),
+	TEXT("OcQd"),
+	TEXT("NoQd"),
+	TEXT("Qg"),
+	TEXT("UQg"),
+	TEXT("DQg"),
+	TEXT("TQg"),
+	TEXT("QaQg"),
+	TEXT("QiQg"),
+	TEXT("SxQg"),
+	TEXT("SpQg"),
+	TEXT("OcQg"),
+	TEXT("NoQg"),
+	TEXT("Sg"),
+	TEXT("USg"),
+	TEXT("DSg"),
+	TEXT("TSg"),
+	TEXT("QaSg"),
+	TEXT("QiSg"),
+	TEXT("SxSg"),
+	TEXT("SpSg"),
+	TEXT("OcSg"),
+	TEXT("NoSg"),
+	TEXT("St"),
+	TEXT("USt"),
+	TEXT("DSt"),
+	TEXT("TSt"),
+	TEXT("QaSt"),
+	TEXT("QiSt"),
+	TEXT("SxSt"),
+	TEXT("SpSt"),
+	TEXT("OcSt"),
+	TEXT("NoSt"),
+	TEXT("Og"),
+	TEXT("UOg"),
+	TEXT("DOg"),
+	TEXT("TOg"),
+	TEXT("QaOg"),
+	TEXT("QiOg"),
+	TEXT("SxOg"),
+	TEXT("SpOg"),
+	TEXT("OcOg"),
+	TEXT("NoOg"),
+	TEXT("Nn"),
+	TEXT("UNn"),
+	TEXT("DNn"),
+	TEXT("TNn"),
+	TEXT("QaNn"),
+	TEXT("QiNn"),
+	TEXT("SxNn"),
+	TEXT("SpNn"),
+	TEXT("OcNn"),
+	TEXT("NoNn")
 	// Add more suffixes as needed
 };
+

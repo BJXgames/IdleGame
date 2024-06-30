@@ -10,7 +10,7 @@
 class UGeneratorUI;
 class UImage;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnManagerSelected, const FName&, ManagerName, float, SpeedBoost, float, IncomeMultiplier, float, MoneyPriceReduction, UTexture2D*, ManagerImage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnManagerSelected, FManagerData, ManagerData);
 
 
 UCLASS()
@@ -31,12 +31,5 @@ public:
 	void SelectManager();
 
 private:
-	FName ManagerName;
-	float SpeedBoost;
-	float IncomeMultiplier;
-	float MoneyPriceReduction;
-
-	UPROPERTY()
-	UTexture2D* ManagerImageInPanel;
-	
+	FManagerData ManagerDataInScrollBox;
 };

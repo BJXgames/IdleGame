@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "MainWorldSubsystem.h"
 #include "Engine/GameInstance.h"
-#include "Data/ManagerData.h"
 #include "UI/MainUI.h"
 #include "MainGameInstance.generated.h"
 
@@ -17,7 +16,7 @@ class IDLEGAME_API UMainGameInstance : public UGameInstance
 	GENERATED_BODY()
 
 	UPROPERTY()
-	UMainWorldSubsystem* WorldSubsystem;
+	AMainPlayerController* MainPlayerController;
 
 public:
 	UMainGameInstance();
@@ -31,6 +30,7 @@ public:
 	void CreateSaveFile();
 	void SaveGame();
 	void LoadGame();
+	
 	virtual void Init() override;
 	
 	virtual void Shutdown() override;
@@ -61,9 +61,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Managers")
 	UDataTable* ManagerDataTable;
 
-	TArray<FManagerData> GetAllManagers() const;
-	FManagerData* GetManagerByName(FName ManagerName) const;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Managers")
+	UDataTable* ManagersUnlockedDataTable;
+
+	UFUNCTION(BlueprintCallable, Category = "Managers")
+	void AddManagerToInventory();
+
+	UFUNCTION(BlueprintCallable)
+	void InitializeWithPlayerController(AMainPlayerController* PlayerController);
+
 protected:
 	virtual void OnStart() override;
+
+	UPROPERTY(EditAnywhere)
+	UTexture2D* Image;
+
+	const FManagerData* GetRandomManagerFromDataTable();
 };

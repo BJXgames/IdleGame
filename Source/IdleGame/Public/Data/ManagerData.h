@@ -39,4 +39,23 @@ struct FManagerData : public FTableRowBase
 	FManagerData()
 		: Name("Default"), SpeedBoost(1.1f), IncomeMultiplier(1.1f), MoneyPriceReduction(0.95f), Rarity(EManagerRarity::Common), ManagerImage(nullptr)
 	{}
+
+	FLinearColor GetRarityColor() const;
 };
+
+inline FLinearColor FManagerData::GetRarityColor() const
+{
+	switch (Rarity)
+	{
+	case EManagerRarity::Common:
+		return FLinearColor::White;
+	case EManagerRarity::Rare:
+		return FLinearColor::Green;
+	case EManagerRarity::Epic:
+		return FLinearColor(0.6, 0, 1.0, 1);
+	case EManagerRarity::Legendary:
+		return FLinearColor::Yellow;
+	default:
+		return FLinearColor::White; // Default to white if the rarity is unknown
+	}
+}

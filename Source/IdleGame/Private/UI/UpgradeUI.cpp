@@ -16,15 +16,21 @@ void UUpgradeUI::NativeConstruct()
 
 void UUpgradeUI::UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLargeNumber Income, FString GenName)
 {
-	const int32 MaxSpeedUpgrades = 5;
-	
 	Income = Income * (1 / MaxTime.Value) * Quantity;
 	Income.Normalize();
 
 	Quantity.Normalize();
 	MaxTime.Normalize();
 
-	CurrentGenerator->GeneratorData.SpeedPrice.Normalize();
+	if(CurrentGenerator)
+	{
+		CurrentGenerator->GeneratorData.SpeedPrice.Normalize();
+	}
+	else
+	{
+		return;
+	}
+	
 	
 	GenIncomeText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(Income)));
 	GenQuantityText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(Quantity)));
@@ -49,7 +55,6 @@ void UUpgradeUI::UpgradeSpeed()
 {
     const float MaxTimeReduction = 0.1f; // Amount to reduce max time by
     const float SpeedPriceMultiplier = 50.0f; // Multiplier for speed price
-    const int32 MaxSpeedUpgrades = 5; // Maximum number of speed upgrades
 
     if (CurrentGenerator->GeneratorData.SpeedUpgradeCount < MaxSpeedUpgrades)
     {

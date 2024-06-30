@@ -66,6 +66,8 @@ protected:
 
 	FLargeNumber IncomePerSecond;
 	
+	void UpdateGeneratorCostsAndUI(UGeneratorUI* Generator, FLargeNumber Multiplier);
+	
 public:
 	
 	UFUNCTION(BlueprintCallable)
@@ -79,7 +81,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void buyxMax();
-
+	
 	void UpdateBuyMultiplier();
 	
 };
