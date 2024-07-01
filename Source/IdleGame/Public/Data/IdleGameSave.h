@@ -37,6 +37,9 @@ struct FGeneratorSaveData
 	TArray<FLargeNumber> SpeedPrices;
 
 	UPROPERTY(VisibleAnywhere)
+	TArray<int32> SpeedUpgradeCounts;
+
+	UPROPERTY(VisibleAnywhere)
 	TArray<FLargeNumber> GeneratorsBought;
 
 	UPROPERTY(VisibleAnywhere)

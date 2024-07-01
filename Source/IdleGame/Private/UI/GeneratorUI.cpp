@@ -3,6 +3,8 @@
 
 #include "UI/GeneratorUI.h"
 
+#include "Styling/SlateBrush.h"
+#include "Styling/SlateTypes.h"
 #include "MainGameInstance.h"
 #include "MainPlayerController.h"
 #include "MainWorldSubsystem.h"
@@ -50,7 +52,12 @@ void UGeneratorUI::Buy()
 	}
 
 	CheckIfBuyAmountHasBeenReached();
-	UpdateGeneratorPanelUI();
+
+	if(MainGameInstance->CurrentSelectedGenerator == this)
+	{
+		UpdateGeneratorPanelUI();
+	}
+	
 }
 
 void UGeneratorUI::UpdateGeneratorDataAfterPurchase() {
@@ -193,22 +200,40 @@ void UGeneratorUI::CheckIncomeGeneration()
 
 void UGeneratorUI::UpdateProgressBar()
 {
-	const float MinMaxTime = 0.1f;
+	const float MinMaxTime = 0.2f;
+	float adjustedMaxTime = GeneratorData.MaxTime.Value;
 
-	if (GeneratorData.MaxTime.Value <= MinMaxTime)
+	if (GeneratorData.Quantity > FLargeNumber(0.0, 0))
 	{
-		// If the generator's speed is too high (MaxTime too low), show a full progress bar
-		ProgressBar->SetPercent(1.0f);
-	}
-	else
-	{
-		float adjustedMaxTime = GeneratorData.MaxTime.Value;
-		if (GeneratorData.Quantity > FLargeNumber(0.0, 0))
+		if (GeneratorData.ManagerData.ManagerImage)
 		{
-			if (GeneratorData.ManagerData.ManagerImage)
+			adjustedMaxTime /= GeneratorData.ManagerData.SpeedBoost;
+		}
+
+		FProgressBarStyle BarStyle = ProgressBar->GetWidgetStyle();
+
+		if (adjustedMaxTime <= MinMaxTime)
+		{
+			ProgressBar->SetIsMarquee(true);
+			
+			FSlateBrush Brush = BarStyle.BackgroundImage;
+
+			if(Brush.Margin != FMargin(0.0f))
 			{
-				adjustedMaxTime /= GeneratorData.ManagerData.SpeedBoost;
+				Brush.Margin = FMargin(0.0f);
+				BarStyle.SetBackgroundImage(Brush);
+				ProgressBar->SetWidgetStyle(BarStyle);
 			}
+			
+		}
+		else
+		{
+			FSlateBrush Brush = BarStyle.BackgroundImage;
+			Brush.Margin = FMargin(0.416667f);
+			BarStyle.SetBackgroundImage(Brush);
+			ProgressBar->SetWidgetStyle(BarStyle);
+            
+			ProgressBar->SetIsMarquee(false);
 			ProgressBar->SetPercent(FMath::Min(Time / adjustedMaxTime, 1.0f));
 		}
 	}

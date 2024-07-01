@@ -66,7 +66,7 @@ void UUpgradeUI::UpgradeSpeed()
     		MainGameInstance->Money -= CurrentGenerator->GeneratorData.SpeedPrice;
 
     		// Increase the speed upgrade price for the next upgrade
-    		CurrentGenerator->GeneratorData.SpeedPrice.Value *= SpeedPriceMultiplier;
+    		CurrentGenerator->GeneratorData.SpeedPrice *= SpeedPriceMultiplier;
     		SpeedUpgradePriceText->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(CurrentGenerator->GeneratorData.SpeedPrice)));
 
     		// Reduce the max time for the generator

@@ -66,6 +66,7 @@ void UMainGameInstance::InitGenerators()
         NewGenerator->GeneratorData.MaxTime = FLargeNumber((i == 0) ? 1 : i * 2.0, 0);
         NewGenerator->GeneratorData.GeneratorName = FString::Printf(TEXT("Gen %d"), i + 1);
         NewGenerator->GeneratorData.SpeedPrice = FLargeNumber(100.0, 0);
+        NewGenerator->GeneratorData.SpeedUpgradeCount = 0;
         NewGenerator->GeneratorData.AmountOfGeneratorToBuy = FLargeNumber(100.0, 0);
         NewGenerator->GeneratorData.ManagerData = FManagerData();
         
@@ -123,6 +124,7 @@ void UMainGameInstance::SaveGame()
         DataToSave->Gens.ProductCosts.Empty();
         DataToSave->Gens.MaxTimes.Empty();
         DataToSave->Gens.SpeedPrices.Empty();
+        DataToSave->Gens.SpeedUpgradeCounts.Empty();
         DataToSave->Gens.GeneratorsBought.Empty();
         DataToSave->Gens.AmountOfGeneratorsToBuy.Empty();
         DataToSave->Gens.ManagerDatas.Empty();
@@ -139,6 +141,7 @@ void UMainGameInstance::SaveGame()
                 DataToSave->Gens.ProductCosts.Add(CurrentGenerator->GeneratorData.ProductCost);
                 DataToSave->Gens.MaxTimes.Add(CurrentGenerator->GeneratorData.MaxTime);
                 DataToSave->Gens.SpeedPrices.Add(CurrentGenerator->GeneratorData.SpeedPrice);
+                DataToSave->Gens.SpeedUpgradeCounts.Add(CurrentGenerator->GeneratorData.SpeedUpgradeCount);
                 DataToSave->Gens.GeneratorsBought.Add(CurrentGenerator->GeneratorData.GeneratorBought); 
                 DataToSave->Gens.AmountOfGeneratorsToBuy.Add(CurrentGenerator->GeneratorData.AmountOfGeneratorToBuy);
                 DataToSave->Gens.ManagerDatas.Add(CurrentGenerator->GeneratorData.ManagerData);
@@ -184,6 +187,7 @@ void UMainGameInstance::LoadGame()
                     NewGenerator->GeneratorData.ProductCost = DataToLoad->Gens.ProductCosts[i];
                     NewGenerator->GeneratorData.MaxTime = DataToLoad->Gens.MaxTimes[i];
                     NewGenerator->GeneratorData.SpeedPrice = DataToLoad->Gens.SpeedPrices[i];
+                    NewGenerator->GeneratorData.SpeedUpgradeCount = DataToLoad->Gens.SpeedUpgradeCounts[i];
                     NewGenerator->GeneratorData.GeneratorBought = DataToLoad->Gens.GeneratorsBought[i];
                     NewGenerator->GeneratorData.AmountOfGeneratorToBuy = DataToLoad->Gens.AmountOfGeneratorsToBuy[i];
                     NewGenerator->GeneratorData.ManagerData = DataToLoad->Gens.ManagerDatas[i];
