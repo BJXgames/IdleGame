@@ -17,6 +17,11 @@
 
 void UGeneratorUI::Buy()
 {
+	if (!UpgradeUIWidget || !MainGameInstance) {
+		UE_LOG(LogTemp, Error, TEXT("Critical component is null in Buy"));
+		return;
+	}
+
 	UpgradeUIWidget->CurrentGenerator = this;
 	MainGameInstance->bIsBought = true;
 
@@ -24,42 +29,18 @@ void UGeneratorUI::Buy()
 	while (i < BuyMultiplier)
 	{
 		FLargeNumber AdjustedMoneyCost = GeneratorData.ManagerData.ManagerImage ? GeneratorData.MoneyCost * GeneratorData.ManagerData.MoneyPriceReduction : GeneratorData.MoneyCost;
-		if (Product && AdjustedMoneyCost <= MainGameInstance->Money && GeneratorData.ProductCost <= Product->GeneratorData.Quantity)
+		
+		if (Product && AdjustedMoneyCost <= MainGameInstance->Money && GeneratorData.ProductCost <= Product->GeneratorData.Quantity || !Product && AdjustedMoneyCost <= MainGameInstance->Money)
 		{
+
 			MainGameInstance->Money -= AdjustedMoneyCost;
-			Product->GeneratorData.Quantity -= GeneratorData.ProductCost;
-			GeneratorData.Quantity += FLargeNumber(1.0, 0);
-			GeneratorData.MoneyCost *= GeneratorCostMultiplier.Value;
-			GeneratorData.MoneyCost.Normalize();
-
-			++GeneratorData.GeneratorBought;
-
-			if (GeneratorData.Quantity.Value == 1)
+			if (Product)
 			{
-				Time = 0;
+				Product->GeneratorData.Quantity -= GeneratorData.ProductCost;
 			}
 
-			CheckIfBuyAmountHasBeenReached();
-			UpdateBuyButtonState();
-			GenerateIncome();
-		}
-		else if (!Product && AdjustedMoneyCost <= MainGameInstance->Money)
-		{
-			MainGameInstance->Money -= AdjustedMoneyCost;
 			GeneratorData.Quantity += FLargeNumber(1.0, 0);
-			GeneratorData.MoneyCost *= GeneratorCostMultiplier.Value;
-			GeneratorData.MoneyCost.Normalize();
-
-			++GeneratorData.GeneratorBought;
-
-			if (GeneratorData.Quantity.Value == 1)
-			{
-				Time = 0;
-			}
-
-			CheckIfBuyAmountHasBeenReached();
-			UpdateBuyButtonState();
-			GenerateIncome();
+			UpdateGeneratorDataAfterPurchase();
 		}
 		else
 		{
@@ -69,7 +50,22 @@ void UGeneratorUI::Buy()
 	}
 
 	CheckIfBuyAmountHasBeenReached();
-	UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, GeneratorData.MaxTime.Value, GeneratorData.Income, GeneratorData.GeneratorName);
+	UpdateGeneratorPanelUI();
+}
+
+void UGeneratorUI::UpdateGeneratorDataAfterPurchase() {
+	GeneratorData.MoneyCost *= GeneratorCostMultiplier.Value;
+	GeneratorData.MoneyCost.Normalize();
+	++GeneratorData.GeneratorBought;
+
+	if (GeneratorData.Quantity.Value == 1) {
+		Time = 0;
+	}
+
+	CheckIfBuyAmountHasBeenReached();
+	UpdateBuyButtonState();
+	GenerateIncome();
+	UpdateGeneratorPanelUI();
 }
 
 
@@ -88,56 +84,63 @@ void UGeneratorUI::UpdateBuyButtonState()
 	}
 }
 
-void UGeneratorUI::GenerateIncome()
-{
-	if (GeneratorData.Quantity.Value > 0)
+void UGeneratorUI::GenerateIncome() {
+	if (GeneratorData.Quantity.Value <= 0) return;
+    
+	float AdjustedMaxTime = GeneratorData.MaxTime.Value;
+	float AdjustedIncomeMultiplier = 1.0f;
+	if (GeneratorData.ManagerData.ManagerImage)
 	{
-		float AdjustedMaxTime = GeneratorData.MaxTime.Value;
-		float AdjustedIncomeMultiplier = 1.0f;
+		AdjustedMaxTime /= GeneratorData.ManagerData.SpeedBoost;
+		AdjustedIncomeMultiplier = GeneratorData.ManagerData.IncomeMultiplier;
+	}
 
-		if (GeneratorData.ManagerData.ManagerImage)
+	if (Time >= AdjustedMaxTime || AdjustedMaxTime < 0.1f) {
+		FLargeNumber IncomeToGenerate = GeneratorData.Income * GeneratorData.Quantity * AdjustedIncomeMultiplier;
+		if (Product)
 		{
-			AdjustedMaxTime /= GeneratorData.ManagerData.SpeedBoost;
-			AdjustedIncomeMultiplier = GeneratorData.ManagerData.IncomeMultiplier;
+			Product->GeneratorData.Quantity += IncomeToGenerate;
 		}
-
-		if (Time >= AdjustedMaxTime || AdjustedMaxTime < 0.1f)
+		else
 		{
-			FLargeNumber IncomeToGenerate = GeneratorData.Income * GeneratorData.Quantity * AdjustedIncomeMultiplier;
-
-			if (Product)
-			{
-				Product->GeneratorData.Quantity += IncomeToGenerate;
-			}
-			else
-			{
-				MainGameInstance->Money += IncomeToGenerate;
-			}
-
-			Time = (AdjustedMaxTime < 0.1f) ? 0 : (Time - AdjustedMaxTime); // Reset Time to 0 if below threshold
-			UpdateProgressBar();
+			MainGameInstance->Money += IncomeToGenerate;
 		}
+		Time = (AdjustedMaxTime < 0.1f) ? 0 : (Time - AdjustedMaxTime);
+		UpdateProgressBar();
+		UpdateGeneratorPanelUI();
 	}
 }
 
-void UGeneratorUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+
+void UGeneratorUI::UpdateGeneratorPanelUI()
 {
+	if (MainGameInstance && MainGameInstance->CurrentSelectedGenerator)
+	{
+		if (GeneratorData.GeneratorName.Equals(MainGameInstance->CurrentSelectedGenerator->GeneratorData.GeneratorName))
+		{
+			float AdjustedMaxTime = GeneratorData.ManagerData.ManagerImage ? GeneratorData.MaxTime.Value / GeneratorData.ManagerData.SpeedBoost : GeneratorData.MaxTime.Value;
+			FLargeNumber AdjustedIncome = GeneratorData.ManagerData.ManagerImage ? GeneratorData.Income * GeneratorData.ManagerData.IncomeMultiplier : GeneratorData.Income;
+
+			UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, AdjustedMaxTime, AdjustedIncome, GeneratorData.GeneratorName);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No generator selected!"))
+	}
+}
+
+void UGeneratorUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime) {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
 	Time += InDeltaTime;
 
-	if (PlayerController)
-	{
-		if (!UpgradeUIWidget)
-		{
-			UpgradeUIWidget = PlayerController->GetUpgradeUI();
-		}
+	if (PlayerController && !UpgradeUIWidget) {
+		UpgradeUIWidget = PlayerController->GetUpgradeUI();
 	}
 
-	if(GeneratorData.Quantity.Value > 0)
-	{
-		FLinearColor Color = FLinearColor::White;
-		GeneratorBackground->SetBrushColor(Color);
+	if (GeneratorData.Quantity.Value > 0) {
+		GeneratorBackground->SetBrushColor(FLinearColor::White);
 		GeneratorBackground->SetIsEnabled(true);
 		GeneratorButton->SetIsEnabled(true);
 	}
@@ -146,6 +149,7 @@ void UGeneratorUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	UpdateProgressBar();
 	CheckIncomeGeneration();
 	UpdateBuyButtonState();
+	UpdateGeneratorPanelUI();
 }
 
 void UGeneratorUI::NativeConstruct()
@@ -176,6 +180,7 @@ void UGeneratorUI::UpdateUIDisplays()
 	MoneyCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(MoneyCost)));
 	ProductCostDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(ProductCost)));
 	NameDisplay->SetText(FText::FromString(GeneratorData.GeneratorName));
+	
 }
 
 void UGeneratorUI::CheckIncomeGeneration()
@@ -213,11 +218,12 @@ void UGeneratorUI::CheckIfBuyAmountHasBeenReached()
 {
 	AmountBoughtOfTheGeneratorDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.GeneratorBought)));
 	AmountToReachIfBuyingGeneratorDisplay->SetText(FText::FromString(WorldSubsystem->FormatLargeNumber(GeneratorData.AmountOfGeneratorToBuy)));
-	
+    
 	if(GeneratorData.GeneratorBought >= GeneratorData.AmountOfGeneratorToBuy)
 	{
 		GeneratorData.AmountOfGeneratorToBuy *= 10;
 		GeneratorData.Income *= 2;
+		UpdateGeneratorPanelUI();
 	}
 }
 
@@ -225,47 +231,51 @@ void UGeneratorUI::ToggleUpgradeWidget(UWidgetAnimation* Animation)
 {
     if (UpgradeUIWidget)
     {
-        // Set the current generator for the upgrade UI
-        UpgradeUIWidget->CurrentGenerator = this;
-
-        if (UpgradeUIWidget->IsVisible())
+        if (MainGameInstance)
         {
-            if (GeneratorData.GeneratorName == MainGameInstance->CurrentSelectedGenerator)
+            if (MainGameInstance->CurrentSelectedGenerator == this)
             {
-                // If the same generator is clicked again, play the reverse animation to hide
-                bIsHiding = true;
-                UpgradeUIWidget->PlayAnimationReverse(Animation);
-            	
-                // Set visibility to collapsed after the animation finishes
-                FTimerHandle TimerHandle;
-                GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]() {
-                    UpgradeUIWidget->SetVisibility(ESlateVisibility::Collapsed);
+                // If the same generator is clicked again, toggle visibility
+                if (UpgradeUIWidget->IsVisible())
+                {
+                    bIsHiding = true;
+                    UpgradeUIWidget->PlayAnimationReverse(Animation);
+                    
+                    // Set visibility to collapsed after the animation finishes
+                    FTimerHandle TimerHandle;
+                    GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]() {
+                        UpgradeUIWidget->SetVisibility(ESlateVisibility::Collapsed);
+                        bIsHiding = false;
+                    }, Animation->GetEndTime(), false);
+                }
+                else
+                {
+                    // If the widget is not visible, set it to visible and play the animation
                     bIsHiding = false;
-                }, Animation->GetEndTime(), false);
+                    UpdateGeneratorPanelUI();
+                    UpgradeUIWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+                    UpgradeUIWidget->PlayAnimation(Animation);
+                }
             }
             else
             {
-                // Update the text with the new generator details
-                float AdjustedMaxTime = GeneratorData.ManagerData.ManagerImage ? GeneratorData.MaxTime.Value / GeneratorData.ManagerData.SpeedBoost : GeneratorData.MaxTime.Value;
-                FLargeNumber AdjustedIncome = GeneratorData.ManagerData.ManagerImage ? GeneratorData.Income * GeneratorData.ManagerData.IncomeMultiplier : GeneratorData.Income;
-                UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, AdjustedMaxTime, AdjustedIncome, GeneratorData.GeneratorName);
+                // If a different generator is clicked, update the selected generator and the panel
+                MainGameInstance->CurrentSelectedGenerator = this;
+                UpdateGeneratorPanelUI();
+                
+                if (!UpgradeUIWidget->IsVisible())
+                {
+                    // If the widget is not visible, set it to visible and play the animation
+                    bIsHiding = false;
+                    UpgradeUIWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+                    UpgradeUIWidget->PlayAnimation(Animation);
+                }
             }
         }
         else
         {
-            // If the widget is not visible, set it to visible and play the animation
-            bIsHiding = false;
-        	
-            float AdjustedMaxTime = GeneratorData.ManagerData.ManagerImage ? GeneratorData.MaxTime.Value / GeneratorData.ManagerData.SpeedBoost : GeneratorData.MaxTime.Value;
-            FLargeNumber AdjustedIncome = GeneratorData.ManagerData.ManagerImage ? GeneratorData.Income * GeneratorData.ManagerData.IncomeMultiplier : GeneratorData.Income;
-        	
-            UpgradeUIWidget->UpdateGenText(GeneratorData.Quantity, AdjustedMaxTime, AdjustedIncome, GeneratorData.GeneratorName);
-            UpgradeUIWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-            UpgradeUIWidget->PlayAnimation(Animation);
+            UE_LOG(LogTemp, Error, TEXT("MainGameInstance is null in UGeneratorUI::ToggleUpgradeWidget"));
         }
-
-        // Update the current selected generator in the game instance
-        MainGameInstance->CurrentSelectedGenerator = GeneratorData.GeneratorName;
     }
     else
     {

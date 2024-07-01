@@ -54,7 +54,8 @@ public:
 
 	void InitGenerators();
 
-	FString CurrentSelectedGenerator = "None";
+	UPROPERTY()
+	UGeneratorUI* CurrentSelectedGenerator;
 
 	bool bIsBought;
 

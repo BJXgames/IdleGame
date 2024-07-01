@@ -263,8 +263,6 @@ void UMainGameInstance::AddManagerToInventory()
         UE_LOG(LogTemp, Warning, TEXT("Cannot add more managers, data table has reached the maximum limit (200 managers)."));
         return;
     }
-
-    MainPlayerController->GetManagerPanelUI()->UpdateManagersToGrid();
     
     // Get a random manager from the ManagerDataTable
     const FManagerData* RandomManager = GetRandomManagerFromDataTable();
@@ -280,6 +278,8 @@ void UMainGameInstance::AddManagerToInventory()
 
     // Add the new manager data to the data table
     ManagersUnlockedDataTable->AddRow(NewRowName, *RandomManager);
+
+    MainPlayerController->GetManagerPanelUI()->UpdateManagersToGrid();
 
     UE_LOG(LogTemp, Log, TEXT("Added new manager to the data table: %s"), *NewRowName.ToString());
 }

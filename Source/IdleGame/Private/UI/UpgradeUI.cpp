@@ -12,6 +12,8 @@ void UUpgradeUI::NativeConstruct()
 	Super::NativeConstruct();
 	WorldSubsystem = GetWorld()->GetSubsystem<UMainWorldSubsystem>();
 	MainGameInstance = GetGameInstance<UMainGameInstance>();
+
+	CurrentGenerator = MainGameInstance->CurrentSelectedGenerator;
 }
 
 void UUpgradeUI::UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLargeNumber Income, FString GenName)
@@ -24,7 +26,7 @@ void UUpgradeUI::UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLar
 
 	if(CurrentGenerator)
 	{
-		CurrentGenerator->GeneratorData.SpeedPrice.Normalize();
+		MainGameInstance->CurrentSelectedGenerator->GeneratorData.SpeedPrice.Normalize();
 	}
 	else
 	{
@@ -40,7 +42,7 @@ void UUpgradeUI::UpdateGenText(FLargeNumber Quantity, FLargeNumber MaxTime, FLar
 
 	if (CurrentGenerator->GeneratorData.SpeedUpgradeCount >= MaxSpeedUpgrades)
 	{
-		SpeedUpgradePriceText->SetText(FText::FromString("Max Upgrades Reached"));
+		SpeedUpgradePriceText->SetText(FText::FromString("Max Upgrades"));
 	}
 	else
 	{
@@ -92,13 +94,20 @@ void UUpgradeUI::UpgradeSpeed()
     else
     {
         // Reached the maximum number of speed upgrades
-        SpeedUpgradePriceText->SetText(FText::FromString("Max Upgrades Reached"));
+        SpeedUpgradePriceText->SetText(FText::FromString("Max Upgrades"));
     }
 }
 
 UManagerUI* UUpgradeUI::GetManagerUI() const
 {
 	return BP_ManagerWidget;
+}
+
+void UUpgradeUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	CurrentGenerator = MainGameInstance->CurrentSelectedGenerator;
 }
 
 

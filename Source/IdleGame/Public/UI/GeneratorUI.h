@@ -120,6 +120,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Buy();
+	void UpdateGeneratorDataAfterPurchase();
 
 	UPROPERTY(EditAnywhere, Category = "Multiplier")
 	FLargeNumber BuyMultiplier = FLargeNumber(1.0, 0);
@@ -154,6 +155,8 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsHiding;
+
+	void UpdateGeneratorPanelUI();
 
 	
 	
